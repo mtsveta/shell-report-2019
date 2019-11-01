@@ -1,0 +1,390 @@
+\begin{thebibliography}{}
+
+\bibitem[Leal et~al., 2017]{Leal2017}
+Leal, A. M.~M., Kulik, D.~A., Smith, W.~R., and Saar, M.~O. (2017).
+\newblock {An overview of computational methods for chemical equilibrium and
+  kinetic calculations for geochemical and reactive transport modeling}.
+\newblock {\em Pure and Applied Chemistry}, 89(5):597--643.
+
+\bibitem[Pitzer, 1973]{Pitzer1973}
+Pitzer, K.~S. (1973).
+\newblock {Thermodynamics of electrolytes. I. Theoretical basis and general
+  equations}.
+\newblock {\em The Journal of Physical Chemistry}, 77(2):268--277.
+
+\bibitem[Peng and Robinson, 1976]{Peng1976}
+Peng, D.-Y. and Robinson, D.~B. (1976).
+\newblock {A New Two-Constant Equation of State}.
+\newblock {\em Industrial {\&} Engineering Chemistry Fundamentals},
+  15(1):59--64.
+
+\bibitem[Ramshaw, 1980]{Ramshaw1980}
+Ramshaw, J.~D. (1980).
+\newblock {Partial Chemical Equilibrium in Fluid Dynamics}.
+\newblock {\em Physics of Fluids}, 23(4):675--680.
+
+\bibitem[Ramshaw and Cloutman, 1981]{Ramshaw1981}
+Ramshaw, J.~D. and Cloutman, L.~D. (1981).
+\newblock {Numerical method for partial equilibrium flow}.
+\newblock {\em Journal of Computational Physics}, 39(2):405--417.
+
+\bibitem[Ramshaw and Amsden, 1985]{Ramshaw1985}
+Ramshaw, J.~D. and Amsden, A.~A. (1985).
+\newblock {Improved iteration scheme for partial equilibrium flow}.
+\newblock {\em Journal of Computational Physics}, 59(3):484--489.
+
+\bibitem[Ramshaw and Chang, 1995]{Ramshaw1995}
+Ramshaw, J. and Chang, C. (1995).
+\newblock {Iteration Scheme for Implicit Calculations of Kinetic and
+  Equilibrium Chemical Reactions in Fluid Dynamics}.
+\newblock {\em Journal of Computational Physics}, 116(2):359--364.
+
+\bibitem[Lichtner, 1985]{Lichtner1985}
+Lichtner, P.~C. (1985).
+\newblock {Continuum model for simultaneous chemical reactions and mass
+  transport in hydrothermal systems}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 49(3):779--800.
+
+\bibitem[Steefel and Lasaga, 1994]{Steefel1994}
+Steefel, C.~I. and Lasaga, A.~C. (1994).
+\newblock {A coupled model for transport of multiple chemical species and
+  kinetic precipitation/dissolution reactions with applications to reactive
+  flow in single phase hydrothermal systems}.
+\newblock {\em American Journal of Science}, 294(5):529--592.
+
+\bibitem[Steefel and MacQuarrie, 1996]{Steefel1996}
+Steefel, C.~I. and MacQuarrie, K. T.~B. (1996).
+\newblock {Approaches to modeling of reactive transport in porous media}.
+\newblock {\em Reviews in Mineralogy and Geochemistry}, 34(1):83--129.
+
+\bibitem[White et~al., 1958]{White1958}
+White, W.~B., Johnson, S.~M., and Dantzig, G.~B. (1958).
+\newblock {Chemical Equilibrium in Complex Mixtures. }.
+\newblock {\em J. Chem. Phys.}, 28:751.
+
+\bibitem[Smith, 1980]{Smith1980}
+Smith, W.~R. (1980).
+\newblock {The Computation of Chemical Equilibria in Complex Systems}.
+\newblock {\em Industrial {\&} Engineering Chemistry Fundamentals},
+  19(1):1--10.
+
+\bibitem[Smith and Missen, 1982]{Smith1982}
+Smith, W. and Missen, R. (1982).
+\newblock {\em {Chemical reaction equilibrium analysis: theory and
+  algorithms}}.
+\newblock Wiley-Interscience, New York.
+
+\bibitem[Alberty, 1992]{Alberty1992b}
+Alberty, R.~A. (1992).
+\newblock {Equilibrium calculations on systems of biochemical reactions at
+  specified pH and pMg}.
+\newblock {\em Biophysical Chemistry}, 42(2):117--131.
+
+\bibitem[Crerar, 1975]{Crerar1975}
+Crerar, D.~A. (1975).
+\newblock {A method for computing multicomponent chemical equilibria based on
+  equilibrium constants}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 39(10):1375--1384.
+
+\bibitem[de~Capitani and Brown, 1987]{DeCapitani1987}
+de~Capitani, C. and Brown, T.~H. (1987).
+\newblock {The computation of chemical equilibrium in complex systems
+  containing non-ideal solutions}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 51(10):2639--2652.
+
+\bibitem[Eriksson and Thompson, 1989]{Eriksson1989}
+Eriksson, G. and Thompson, W. (1989).
+\newblock {A procedure to estimate equilibrium concentrations in multicomponent
+  systems and related applications}.
+\newblock {\em Calphad}, 13(4):389--400.
+
+\bibitem[Ghiorso, 1994]{Ghiorso1994}
+Ghiorso, M.~S. (1994).
+\newblock {Algorithms for the estimation of phase stability in heterogeneous
+  thermodynamic systems}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 58(24):5489--5501.
+
+\bibitem[McBride and Gordon, 1971]{Gordon1971}
+McBride, B.~J. and Gordon, S. (1971).
+\newblock {Computer program for calculation of complex chemical equilibrium
+  compositions rocket performance incident and reflected shocks, and
+  Chapman-Jouguet detonations}.
+\newblock Technical report, NASA.
+
+\bibitem[McBride and Gordon, 1994]{Gordon1994a}
+McBride, B.~J. and Gordon, S. (1994).
+\newblock {Computer Program for Calculation of Complex Chemical Equilibrium
+  Compositions and Applications: I. Analysis}.
+\newblock Technical report.
+
+\bibitem[McBride and Gordon, 1996]{Gordon1996}
+McBride, B.~J. and Gordon, S. (1996).
+\newblock {Computer Program for Calculation of Complex Chemical Equilibrium
+  Compositions and Applications: II-User Manual and Program Description}.
+\newblock Technical report, NASA.
+
+\bibitem[Harvey et~al., 2013]{Harvey2013}
+Harvey, J.~P., Eriksson, G., Orban, D., and Chartrand, P. (2013).
+\newblock {Global minimization of the gibbs energy of multicomponent systems
+  involving the presence of order/disorder phase transitions}.
+\newblock {\em American Journal of Science}, 313(3):199--241.
+
+\bibitem[Harvie et~al., 1987]{Harvie1987}
+Harvie, C.~E., Greenberg, J.~P., and Weare, J.~H. (1987).
+\newblock {A chemical equilibrium algorithm for highly non-ideal multiphase
+  systems: Free energy minimization}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 51(5):1045--1057.
+
+\bibitem[Karpov et~al., 1997]{Karpov1997}
+Karpov, I.~K., Chudnenko, K.~V., and Kulik, D.~A. (1997).
+\newblock {Modeling chemical mass transfer in geochemical processes:
+  Thermodynamic relations, conditions of equilibria, and numerical algorithms}.
+\newblock {\em American Journal of Science}, 297(8):767--806.
+
+\bibitem[Karpov et~al., 2001]{Karpov2001}
+Karpov, I.~K., Chudnenko, K.~V., Kulik, D.~A., Avchenko, O.~V., and Bychinski,
+  V.~A. (2001).
+\newblock {Minimization of Gibbs free energy in geochemical systems by convex
+  programming}.
+\newblock {\em Geochemistry International}, 39(11):1108--1119.
+
+\bibitem[Karpov et~al., 2002]{Karpov2002}
+Karpov, I.~K., Chudnenko, K.~V., Kulik, D.~A., and Bychinskii, V.~A. (2002).
+\newblock {The convex programming minimization of five thermodynamic potentials
+  other than Gibbs energy in geochemical modeling}.
+\newblock {\em American Journal of Science}, 302(4):281--311.
+
+\bibitem[Koukkari and Pajarre, 2011]{Koukkari2011a}
+Koukkari, P. and Pajarre, R. (2011).
+\newblock {A Gibbs energy minimization method for constrained and partial
+  equilibria}.
+\newblock {\em Pure and Applied Chemistry}, 83(6):1243--1254.
+
+\bibitem[Kulik et~al., 2013]{Kulik2013}
+Kulik, D.~A., Wagner, T., Dmytrieva, S.~V., Kosakowski, G., Hingerl, F.~F.,
+  Chudnenko, K.~V., and Berner, U.~R. (2013).
+\newblock {GEM-Selektor geochemical modeling package: revised algorithm and
+  GEMS3K numerical kernel for coupled simulation codes}.
+\newblock {\em Computational Geosciences}, 17(1):1--24.
+
+\bibitem[Leal et~al., 2013]{Leal2013}
+Leal, A. M.~M., Blunt, M.~J., and LaForce, T.~C. (2013).
+\newblock {A robust and efficient numerical method for multiphase equilibrium
+  calculations: Application to CO2-brine-rock systems at high temperatures,
+  pressures and salinities}.
+\newblock {\em Advances in Water Resources}, 62(Part C):409--430.
+
+\bibitem[Leal et~al., 2014]{Leal2014}
+Leal, A.~M., Blunt, M.~J., and LaForce, T.~C. (2014).
+\newblock {Efficient chemical equilibrium calculations for geochemical
+  speciation and reactive transport modelling}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 131:301--322.
+
+\bibitem[Leal et~al., 2016a]{Leal2016a}
+Leal, A.~M., Kulik, D.~A., and Kosakowski, G. (2016a).
+\newblock {Computational methods for reactive transport modeling: A Gibbs
+  energy minimization approach for multiphase equilibrium calculations}.
+\newblock {\em Advances in Water Resources}, 88:231--240.
+
+\bibitem[Leal et~al., 2016b]{Leal2016c}
+Leal, A.~M., Kulik, D.~A., Kosakowski, G., and Saar, M.~O. (2016b).
+\newblock {Computational methods for reactive transport modeling: An extended
+  law of mass-action, xLMA, method for multiphase equilibrium calculations}.
+\newblock {\em Advances in Water Resources}, 96:405--422.
+
+\bibitem[Morel and Morgan, 1972]{Morel1972}
+Morel, F. and Morgan, J. (1972).
+\newblock {Numerical method for computing equilibriums in aqueous chemical
+  systems}.
+\newblock {\em Environmental Science {\&} Technology}, 6(1):58--67.
+
+\bibitem[N{\'{e}}ron et~al., 2012]{Neron2012}
+N{\'{e}}ron, A., Lantagne, G., and Marcos, B. (2012).
+\newblock {Computation of complex and constrained equilibria by minimization of
+  the Gibbs free energy}.
+\newblock {\em Chemical Engineering Science}, 82:260--271.
+
+\bibitem[Nordstrom et~al., 1979]{Nordstrom1979}
+Nordstrom, D., Plummer, L.~N., Wigley, T., Wolery, T., Ball, J., Jenne, E.,
+  Bassett, R., Crerar, D., Florence, T., Fritz, B., Hoffman, M., Holdren, G.,
+  Jr., L.~G., Mattigod, S., McDuff, R., Morel, F., Reddy, M., and Sposito, G.
+  (1979).
+\newblock {A comparison of computerized chemical models for equilibrium
+  calculations in aqueous systems}.
+\newblock {\em American Chemical Society Symposium Series}, 93:857--892.
+
+\bibitem[Trangenstein, 1987]{Trangenstein1986}
+Trangenstein, J.~A. (1987).
+\newblock {Customized minimization techniques for phase equilibrium
+  computations in reservoir simulation}.
+\newblock {\em Chemical Engineering Science}, 42(12):2847--2863.
+
+\bibitem[van Zeggeren and Storey, 1970]{VanZeggeren1970}
+van Zeggeren, F. and Storey, S.~H. (1970).
+\newblock {\em {The Computation of Chemical Equilibria}}.
+\newblock Cambridge University Press, London, England.
+
+\bibitem[Vonka and Leitner, 1995]{Vonka1995}
+Vonka, P. and Leitner, J. (1995).
+\newblock {Calculation of chemical equilibria in heterogeneous multicomponent
+  systems}.
+\newblock {\em Calphad}, 19(1):25--36.
+
+\bibitem[Wolery and Walters, 1975]{Wolery1975}
+Wolery, T.~J. and Walters, L.~J. (1975).
+\newblock {Calculation of equilibrium distributions of chemical species in
+  aqueous solutions by means of monotone sequences}.
+\newblock {\em Journal of the International Association for Mathematical
+  Geology}, 7(2):99--115.
+
+\bibitem[Zeleznik and Gordon, 1960]{Zeleznik1960}
+Zeleznik, F.~J. and Gordon, S. (1960).
+\newblock {An analytical investigation of the general methods of calculating
+  chemical equilibrium compositions}.
+\newblock (NASA-TN-D-473).
+
+\bibitem[Pope, 1997]{Pope1997}
+Pope, S.~B. (1997).
+\newblock Computationally efficient implementation of combustion chemistry
+  using in situ adaptive tabulation.
+\newblock {\em Combust. Theory Model.}, 1(1):41--63.
+
+\bibitem[Hedengren and Edgar, 2008]{HedengrenEdgar2008}
+Hedengren, J.~D. and Edgar, T.~F. (2008).
+\newblock Approximate nonlinear model predictive control with in situ adaptive
+  tabulation.
+\newblock {\em Computers {\&} Chemical Engineering}, 32(4-5):706--714.
+
+\bibitem[Chen, 2005]{Chen2018}
+Chen, J.-Y. (2005).
+\newblock Analysis of in situ adaptive tabulation performance for combustion
+  chemistry and improvement with a modified search algorithm.
+\newblock {\em Combustion Science and Technology}, 176(7):1153--1169.
+
+\bibitem[Wu et~al., 2018]{WuDongLi2018}
+Wu, J., Dong, G., and Li, B. (2018).
+\newblock Parallel chemistry acceleration algorithms based on {ISAT} method in
+  gaseous detonation computations.
+\newblock {\em Comput. \& Fluids}, 167:265--284.
+
+\bibitem[Turanyi, 1994]{Turanyi1994}
+Turanyi, T. (1994).
+\newblock Parameterization of reaction mechanisms using orthonormal
+  polynomials.
+\newblock {\em Comput. Chem.}, 18:45--54.
+
+\bibitem[Christo et~al., 1996]{ChristoMasriNebot1996}
+Christo, F., Masri, A., and Nebot, E. (1996).
+\newblock Artificial neural network implementation of chemistry with pdf
+  simulation of h2=co2 flames.
+\newblock {\em Combust. Flame}, 106:406--427.
+
+\bibitem[Blasco et~al., 1998]{Blascoetall1998}
+Blasco, J., Fueyo, N., Dopazo, C., and Ballester, J. (1998).
+\newblock Modelling the temporal evolution of a reduced combustion chemical
+  system with an artificial neural network.
+\newblock {\em Combust. Flame}, 113:38--52.
+
+\bibitem[Tonse et~al., 1999]{TonseMoriartyBrownFrenklach2013}
+Tonse, S.~R., Moriarty, N.~W., Brown, N., and Frenklach, M. (1999).
+\newblock Prism: Piecewise reusable implementation of solution mapping. an
+  economical strategy for chemical kinetics.
+\newblock {\em Israel Journal of Chemistry}, 39:97--106.
+
+\bibitem[Jatnieks et~al., 2016]{Jatnieks2016}
+Jatnieks, J., {De Lucia}, M., Dransch, D., and Sips, M. (2016).
+\newblock {Data-driven Surrogate Model Approach for Improving the Performance
+  of Reactive Transport Simulations}.
+\newblock {\em Energy Procedia}, 97:447--453.
+
+\bibitem[Parkhurst and Appelo, 2013]{Parkhurst2013}
+Parkhurst, D. and Appelo, C. (2013).
+\newblock {Description of input and examples for PHREEQC version 3—A computer
+  program for speciation, batch-reaction, one-dimensional transport, and
+  inverse geochemical calculations}.
+\newblock In {\em Groundwater Book 6, Modeling Techniques}, chapter A43, page
+  497. U.S. Geological Survey Techniques and Methods.
+
+\bibitem[Leal et~al., 2016]{Leal2016b}
+Leal, A.~M., Kulik, D.~A., and Saar, M.~O. (2016).
+\newblock {Enabling Gibbs energy minimization algorithms to use equilibrium
+  constants of reactions in multiphase equilibrium calculations}.
+\newblock {\em Chemical Geology}, 437:170--181.
+
+\bibitem[Harvie et~al., 1984]{Harvie1984}
+Harvie, C.~E., M{\o}ller, N., and Weare, J.~H. (1984).
+\newblock {The prediction of mineral solubilities in natural waters: The
+  Na-K-Mg-Ca-H-Cl-SO4-OH-HCO3-CO3-CO2-H2O system to high ionic strengths at
+  25°C}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 48(4):723--751.
+
+\bibitem[Drummond, 1981]{drummond1981boiling}
+Drummond, S. (1981).
+\newblock {\em {Boiling and mixing of hydrothermal fluids: chemical effects on
+  mineral precipitation}}.
+\newblock Ph.d., Pennsylvania State University.
+
+\bibitem[Helgeson and Kirkham, 1974]{Helgeson1974}
+Helgeson, H.~C. and Kirkham, D.~H. (1974).
+\newblock {Theoretical prediction of the thermodynamic behavior of aqueous
+  electrolytes at high pressures and temperatures: I. Summary of the
+  thermodynamic/electrostatic properties of the solvent}.
+\newblock {\em American Journal of Science}, 274(10):1089--1198.
+
+\bibitem[Helgeson et~al., 1978]{Helgeson1978}
+Helgeson, H.~C., Delany, J.~M., Nesbitt, H.~W., and Bird, D.~K. (1978).
+\newblock {Summary and critique of the thermodynamic properties of rock-forming
+  minerals}.
+\newblock {\em American Journal of Science}, 278 A(1):229.
+
+\bibitem[Tanger and Helgeson, 1988]{Tanger1988}
+Tanger, J.~C. and Helgeson, H.~C. (1988).
+\newblock {Calculation of the thermodynamic and transport properties of aqueous
+  species at high pressures and temperatures; revised equations of state for
+  the standard partial molal properties of ions and electrolytes}.
+\newblock {\em American Journal of Science}, 288(1):19--98.
+
+\bibitem[Shock and Helgeson, 1988]{Shock1988}
+Shock, E. and Helgeson, H.~C. (1988).
+\newblock {Calculation of the thermodynamic and transport properties of aqueous
+  species at high pressures and temperatures: Correlation algorithms for ionic
+  species and equation of state predictions to 5 kb and 1000°C}.
+\newblock {\em Geochimica et Cosmochimica Acta}, 52(8):2009--2036.
+
+\bibitem[Shock et~al., 1992]{Shock1992}
+Shock, E.~L., Oelkers, E.~H., Johnson, J.~W., Sverjensky, D.~A., and Helgeson,
+  H.~C. (1992).
+\newblock {Calculation of the thermodynamic properties of aqueous species at
+  high pressures and temperatures. Effective electrostatic radii, dissociation
+  constants and standard partial molal properties to 1000 °C and 5 kbar}.
+\newblock {\em Journal of the Chemical Society, Faraday Transactions},
+  88(6):803.
+
+\bibitem[Johnson et~al., 1992]{Johnson1992}
+Johnson, J.~W., Oelkers, E.~H., and Helgeson, H.~C. (1992).
+\newblock {SUPCRT92: A software package for calculating the standard molal
+  thermodynamic properties of minerals, gases, aqueous species, and reactions
+  from 1 to 5000 bar and 0 to 1000 C}.
+\newblock {\em Computers {\&} Geosciences}, 18(7):899--947.
+
+\bibitem[Wagner and Pruss, 2002]{Wagner2002}
+Wagner, W. and Pruss, A. (2002).
+\newblock {The IAPWS Formulation 1995 for the Thermodynamic Properties of
+  Ordinary Water Substance for General and Scientific Use}.
+\newblock {\em Journal of Physical and Chemical Reference Data}, 31(2):387.
+
+\bibitem[Leal, 2018]{autodiff2018}
+Leal, A.~M. (2018).
+\newblock autodiff, c++ library for automatic differentiation.
+
+\bibitem[Nocedal and Wright, 1999]{Nocedal1999}
+Nocedal, J. and Wright, S.~J. (1999).
+\newblock {\em {Numerical Optimization}}.
+\newblock Springer, 2nd edition.
+
+\bibitem[Fletcher, 2000]{Fletcher2000}
+Fletcher, R. (2000).
+\newblock {\em {Practical Methods of Optimization}}.
+\newblock Wiley, 2nd edition.
+
+\end{thebibliography}
