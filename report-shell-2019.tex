@@ -1,50 +1,7 @@
 %% LyX 2.3.3 created this file.  For more info, see http://www.lyx.org/.
 %% Do not edit unless you really know what you are doing.
 \documentclass[12pt,english,sort&compress]{article}
-\usepackage{mathpazo}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage{geometry}
-\geometry{verbose,tmargin=2cm,bmargin=2cm,lmargin=2cm,rmargin=2cm}
-\setlength{\parskip}{\medskipamount}
-\setlength{\parindent}{0pt}
-\synctex=-1
-\usepackage{babel}
-\usepackage{units}
-\usepackage{textcomp}
-\usepackage{mathtools}
-\usepackage{enumitem}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{graphicx}
-\usepackage[numbers]{natbib}
-\usepackage[unicode=true,pdfusetitle,
- bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
- breaklinks=false,pdfborder={0 0 0},pdfborderstyle={},backref=false,colorlinks=false]
- {hyperref}
-\usepackage{xcolor} % for using color in the text
-
-
-\makeatletter
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Textclass specific LaTeX commands.
-\newlength{\lyxlabelwidth}      % auxiliary length 
-\newcommand{\lyxaddress}[1]{
-	\par {\raggedright #1
-	\vspace{1.4em}
-	\noindent\par}
-}
-
-\@ifundefined{date}{}{\date{}}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
-\usepackage{fouriernc}
-\usepackage{textcomp} % Needed for degC
-\usepackage{kbordermatrix}
-\usepackage{comment}
-
-\usepackage{graphicx}
-\newcommand\wlength{2.5em}
-\newcommand\w[1]{\makebox[\wlength]{$#1$}}
-\newcommand\minus[1]{\mathllap{-}#1}
+\input{custom-packages}
 
 \makeatother
 
@@ -94,7 +51,8 @@ the resulting computer simulations are usually time-consuming.
 
 %---------------------------------------------------------------------------------------------------%
 Often, the relatively long computing time of reactive transport simulations can be largely attributed 
-to the need of performing millions to billions of chemical reaction calculations, in particular, \emph{chemical kinetics} and\slash or \emph{equilibrium speciation calculations} performed in every 
+to the need of performing millions to billions of chemical reaction calculations, in particular, 
+\emph{chemical kinetics} and\slash or \emph{equilibrium speciation calculations} performed in every 
 mesh cell during every time step of the simulation. These chemical reaction calculations are 
 computationally expensive because they involve iterative algorithms to solve systems of non-linear 
 algebraic (SnLAE) and\slash or ordinary differential equations (ODEs) \citep{Leal2017}. As a result, 
@@ -102,16 +60,27 @@ they trigger repeated evaluations of thermodynamic properties, such as activity\
 coefficients (sometimes using computationally demanding models such as \citet{Pitzer1973} for aqueous 
 phases and \citet{Peng1976} for gaseous/liquid phases).
 
+%---------------------------------------------------------------------------------------------------%
 Thus, speeding up reactive transport modeling by a significant factor may only be accomplished by 
-first accelerating chemical reaction calculations in general. Advancing chemical equilibrium speciation calculations is essential when employing a \emph{partial local chemical equilibrium assumption} \citep{Ramshaw1980,Ramshaw1981,Ramshaw1985,Ramshaw1995,Lichtner1985,Steefel1994,Steefel1996}.
-This assumes that the species that are reacting at relatively high rates (typically aqueous or gaseous species) are in a state of continual chemical equilibrium in each mesh cell. In contrast, the species reacting at slow to moderate rates (typically minerals) do so according to kinetic rate laws and, 
+first accelerating chemical reaction calculations in general. Advancing chemical equilibrium speciation 
+calculations is essential when employing a \emph{partial local chemical equilibrium assumption} 
+\citep{Ramshaw1980,Ramshaw1981,Ramshaw1985,Ramshaw1995,Lichtner1985,Steefel1994,Steefel1996}.
+This assumes that the species that are reacting at relatively high rates (typically aqueous or gaseous 
+species) are in a state of continual chemical equilibrium in each mesh cell. In contrast, the species 
+reacting at slow to moderate rates (typically minerals) do so according to kinetic rate laws and, 
 hence, are not in equilibrium with the rest of the system. Thus, accelerating those millions to 
 billions of chemical calculations over the course of a massive numerical reactive transport simulation 
 is essential when using fine-resolution meshes, large three-dimensional domains, and\slash or long 
 simulation times at fine temporal resolution.
 
+%---------------------------------------------------------------------------------------------------%
 Major advances in developing fast, accurate, and robust methods for chemical equilibrium calculations, 
-in particular, have been achieved over the past decades. These are either based on \emph{Gibbs energy minimization} (GEM) or \emph{law of mass action} (LMA) formulations \citep{White1958,Smith1980,Smith1982,Alberty1992b,Crerar1975,DeCapitani1987,Eriksson1989,Ghiorso1994,Gordon1971,Gordon1994a,Gordon1996,Harvey2013,Harvie1987,Karpov1997,Karpov2001,Karpov2002,Koukkari2011a,Kulik2013,Leal2013,Leal2014,Leal2016a,Leal2016c,Leal2017,Morel1972,Neron2012,Nordstrom1979,Trangenstein1986,VanZeggeren1970,Vonka1995,Wolery1975,Zeleznik1960}.
+in particular, have been achieved over the past decades. These are either based on 
+\emph{Gibbs energy minimization} (GEM) or \emph{law of mass action} (LMA) formulations 
+\citep{White1958,Smith1980,Smith1982,Alberty1992b,Crerar1975,DeCapitani1987,Eriksson1989,Ghiorso1994,
+Gordon1971,Gordon1994a,Gordon1996,Harvey2013,Harvie1987,Karpov1997,Karpov2001,Karpov2002,Koukkari2011a,
+Kulik2013,Leal2013,Leal2014,Leal2016a,Leal2016c,Leal2017,Morel1972,Neron2012,Nordstrom1979,
+Trangenstein1986,VanZeggeren1970,Vonka1995,Wolery1975,Zeleznik1960}.
 %
 However, even if one could devise a hypothetical algorithm that would always converge in a single 
 iteration, instead of the typical few to dozens of iterations, the computational cost of chemical 
@@ -120,54 +89,69 @@ as during this single iteration, expensive thermodynamic models would still have
 matrix equations be solved, when using a Newton-based GEM or LMA algorithm. In view of this, a 
 substantial acceleration of these calculations can be achieved if those costly operations
 can be bypassed whenever possible. Similarly, advanced methods for solving system of ODEs has been 
-developed during last ** decades {\color{red}\cite{}}. However, we aim to develop such an approach that 
-sidesteps costly numerical integration of the system that governs the evolution of kinetics species 
-within considered transport step.
+developed during couple of last decades {TODO: add citation to classic works \color{red}\cite{}}. 
+However, we aim to develop such an approach that sidesteps costly numerical integration of the system 
+that governs the evolution of kinetics species within considered transport step.
 
 \begin{figure}[!t]
 	\centering
-	\subfloat[$\vectoru(x, y, t)$]{
-	\includegraphics[width=7cm]{pics/example-1/displacement-n-1001.pdf}
+	\subfloat[]{
+	\includegraphics[height=6cm]{figures/intro/similar-equilibirum.png}
 	\label{fig:similar-equilibrium}}
 	\quad
-	\subfloat[$p(x, y, t)$]{
-	\includegraphics[width=7cm]{pics/example-1/pressure-n-1001-cells-16384-vertices-8321.pdf}
+	\subfloat[]{
+	\includegraphics[height=6cm]{figures/intro/similar-kinetics.png}
 	\label{fig:similar-kinetics}}
-	\caption{Pair of the exact solutions $(u, p)$.}
+	\caption{Example of similar chemical speciations encountered in chemical equilibrium and kinetics.}
 	\label{fig:similar-equilibrium-kinetics}
 \end{figure}
 
+%---------------------------------------------------------------------------------------------------%
 During a single time step of a reactive transport simulation, chemical kinetics and equilibrium
-calculations are needed in all mesh cells. Often, many of these calculations are similar to previously performed ones, either within the same time-step and\slash or mesh cell or at different points in space and\slash or time (see Figure \ref{}). We assume two chemical equilibrium problems to be similar when their
-input conditions are sufficiently close (i.e., similar temperature,
-pressure, amounts of chemical elements, and the electric charge of each
-phase, containing electrically charged species \citep{Smith1982}).
-These chemical equilibrium calculations are hardly identical so that
-we cannot simply assume a previously computed chemical speciation as the exact
-result of the new calculation. Interpolating is also not an appropriate
-approach, as it can violate the \emph{mass conservation} of elements (i.e.,
-there is a deviation between the input element amounts and the amounts
-of elements calculated from the interpolated species amounts).
+calculations are needed in all mesh cells. Often, many of these calculations are similar to previously 
+performed ones, either within the same time-step and\slash or mesh cell or at different points in 
+space and\slash or time (see Figure \ref{fig:similar-equilibrium-kinetics}). We assume two chemical 
+equilibrium problems to be similar when their input conditions are sufficiently close (i.e., similar 
+temperature, pressure, amounts of chemical elements, and the electric charge of each phase, containing 
+electrically charged species \citep{Smith1982}). At the same time, these chemical equilibrium 
+calculations are hardly identical so that we cannot simply assume a previously computed chemical 
+speciation as the exact result of the new calculation. Interpolating is also not an appropriate
+approach, as it can violate the \emph{mass conservation} of elements (i.e., there is a deviation 
+between the input element amounts and the amounts of elements calculated from the interpolated species 
+amounts). 
 
-The main principle of the \emph{algorithm}, suggested here, is precisely to \emph{avoid} as much as possible full and expensive
-chemical equilibrium speciation calculations during the reactive transport simulation. 
-That is why it is often referred as \emph{smart chemical equilibrium algorithm}.
-By using \emph{sensitivity derivatives} of previously computed chemical equilibrium
-states, we can quickly and accurately estimate the new equilibrium
-state (chemical speciation) under similar input conditions. These derivatives provide an insight on how sensitive
-the computed species amounts at a certain equilibrium state are with
-respect to infinitesimally small changes in temperature, pressure, and amounts of chemical elements. Thus, multiplying these sensitivity derivatives by the respective
-differences in input conditions (e.g., differences in temperature
-or the amount of a particular element), we can predict the variation
-in the output. For example, we can estimate how much the species amounts
-would change by increasing temperature by 1~°C, by adding 1~mmol
-of HCl into the system (which is equivalent to adding 1~mmol of elements
-H and Cl), or by combining these with other input changes. We remark
-that the use of sensitivity derivatives to estimate the solution of
-an equilibrium problem is inherently \emph{mass conservative}, since they are being computed along the derivation of chemical equilibrium equations (with equations of element mass conservation included).
+%---------------------------------------------------------------------------------------------------%
+The main principle of the \emph{algorithm}, suggested here, is precisely to \emph{avoid} as much as 
+possible full and expensive chemical speciation calculations during the reactive transport simulation. 
+That is why it is often referred as \emph{smart chemical equilibrium algorithm}. By using 
+\emph{sensitivity derivatives} of previously computed chemical equilibrium states, we can quickly 
+and accurately estimate the new equilibrium state (chemical speciation) under similar input conditions
+(see Figure \ref{fig:similar-equilibrium}). These derivatives provide an insight on how sensitive
+the computed species amounts at a certain equilibrium state are with respect to infinitesimally small 
+changes in temperature, pressure, and amounts of chemical elements. Thus, multiplying these sensitivity 
+derivatives by the respective differences in input conditions (e.g., differences in temperature
+or the amount of a particular element), we can predict the variation in the output. For example, we 
+can estimate how much the species amounts would change by increasing temperature by 1~°C, by adding 
+1~mmol of HCl into the system (which is equivalent to adding 1~mmol of elements H and Cl), or by 
+combining these with other input changes. We remark that the use of sensitivity derivatives to estimate 
+the solution of an equilibrium problem is inherently \emph{mass conservative}, since they are being 
+computed along the derivation of chemical equilibrium equations (with equations of element mass 
+conservation included).
+
+%---------------------------------------------------------------------------------------------------%
+If kinetically controlled species are considered, one can find similarities in their initial 
+states at each transport step. Figure \ref{fig:similar-kinetics} illustrated possible perturbations 
+of fluid/rock compositions in mess cells discretising two-dimensional reservoir. \emph{Smart chemical 
+kinetics algorithm} will perform numerical integration of the system of kinetic species only in 
+firstly evaluated/uniquely distinguished initial states (marked with empty circles in Figure 
+\ref{fig:similar-kinetics}), recovering simultaneously additional information about their sensitivities 
+with respect to (w.r.t.) infinitesimal changes in the initial condition. In the rest of the subsequently 
+encountered cells, we attempt to make \emph{smart prediction} of the possible kinetic speciation at the 
+end of the transport step.
 
 \subsubsection*{Related Work}
 
+%---------------------------------------------------------------------------------------------------%
 Increasing the speed of chemical reaction calculations, i.e., equilibrium
 and\slash or kinetics, is an active research topic. The majority of
 the existing methodologies are based on the use of \emph{surrogate
