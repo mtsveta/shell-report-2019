@@ -59,118 +59,112 @@ Reaktoro as the chemical reaction solver in Shell's reservoir simulator}
 \emph{\small{}Institute of Geophysics, Department
 of Earth Sciences, ETH Zürich, Switzerland\\[0.5em]}
 \par\end{center}}
+%---------------------------------------------------------------------------------------------------%
 \begin{abstract}
-Report in dedicated to describing the results and the progress of the first year 
-of the project 'Reaktoro as the chemical reaction solver in Shell's reservoir simulator'....
-
-Motivation: 
-During reactive transport modeling, the computational cost associated
-with chemical reaction calculations is often 10–10'000 times higher
-than that of transport calculations. Chemical equilibrium calculations
-performed in every mesh cell and at every time step of the simulation
-are often responsible for this high computing costs. We consider thus
-an \emph{on-demand learning strategy} that enables chemical equilibrium
-problems during a reactive transport simulation to be quickly and
-accurately predicted using previously collected solution knowledge
-of chemical equilibrium problems within the same simulation. We demonstrate
-the use of this smart chemical equilibrium algorithm in a reactive
-transport modeling example, in which a speedup of two orders of magnitude
-is achieved. This algorithm has been implemented in Reaktoro, a unified
-open-source framework for modeling chemically reactive systems.
+The report in dedicated to describe the results obtained during the first year of the project 
+``Reaktoro as the chemical reaction solver in Shell's reservoir simulator'. It is mainly focused 
+on the first task of the project plan, i.e., ``Accelerating chemical kinetics in reactivate transport 
+(RT) calulations''. Below, we summarise the main motivation of the this task. During reactivate 
+transport modeling, 
+the computational cost associated with chemical equilibrium and chemical kinetics speciation 
+calculations can be 10–10'000 times higher than that of fluid flow and solute transport simulations. 
+Such geochemical calculations must be performed in each mesh cell at every time step of the simulation, 
+incurring high computing costs. To radically reduce these, we consider a new \emph{on-demand machine 
+learning strategy} (also referred as \emph{smart algorithm}) that, during reactive transport 
+simulations, enables the chemical speciation to be quickly and accurately predicted using stored 
+results of previous chemical equilibrium calculations performed within the simulation session. 
+We demonstrate the applicability and utility of this algorithm in a reactive transport modeling 
+example, where it yields a calculation speedup of one-two orders of magnitude. The implementation 
+and numerical tests are carried out in Reaktoro, a unified, open-source framework for modeling 
+chemically reactive systems. Further research plans and ideas to improve considered algorithm are 
+also summarized.
 \end{abstract}
 
 \section{Introduction}
 
-In reactive transport simulations, coupled chemical and physical processes
-are modeled to understand phenomena that involve chemical reactions
-and transport of chemical species. Examples of chemical processes
-are reactions between species in an aqueous fluid leading to precipitation
-of solid minerals, or their reaction with existing rock minerals causing
-mineral dissolution. Examples of physical processes are the advection
-of chemical species in a fluid that flows with a certain velocity,
-or the diffusion of those fluid species as a result of the concentration
-gradient across the medium. Because of the various processes considered
-in a reactive transport model, the resulting computer simulations
-are usually time-consuming.
+%---------------------------------------------------------------------------------------------------%
+In reactive transport simulations, coupled chemical and physical processes are modeled to understand 
+phenomena that involve the transport of chemical species (i.e. reactants) and chemical reactions. 
+Examples of chemical processes are reactions between species in an aqueous fluid leading to 
+precipitation of solid minerals, or their reaction with existing rock minerals causing mineral 
+dissolution. Examples of physical processes are the advection of chemical species in a fluid that flows 
+with a certain velocity, or the diffusion of those fluid species as a result of the concentration 
+gradient across the medium. Because of the various processes combined into a reactive transport model, 
+the resulting computer simulations are usually time-consuming.
 
-Often, the relatively long computing time of reactive transport simulations
-can be attributed to the need of performing millions to billions of
-chemical reaction calculations. These are \emph{chemical kinetics}
-and\slash or \emph{chemical equilibrium calculations} performed on
-every mesh cell, at every time step of the simulation. These chemical
-reaction calculations are computationally expensive because they involve
-iterative algorithms to solve systems of non-linear algebraic and\slash or
-differential equations \citep{Leal2017}. As a result, it triggers
-repeated evaluations of thermodynamic properties, such as activity\slash fugacity
-coefficients (sometimes using computationally demanding models such
-as \citet{Pitzer1973} for aqueous phases and \citet{Peng1976} for
-gaseous/liquid phases).
+%---------------------------------------------------------------------------------------------------%
+Often, the relatively long computing time of reactive transport simulations can be largely attributed 
+to the need of performing millions to billions of chemical reaction calculations, in particular, \emph{chemical kinetics} and\slash or \emph{equilibrium speciation calculations} performed in every 
+mesh cell during every time step of the simulation. These chemical reaction calculations are 
+computationally expensive because they involve iterative algorithms to solve systems of non-linear 
+algebraic (SnLAE) and\slash or ordinary differential equations (ODEs) \citep{Leal2017}. As a result, 
+they trigger repeated evaluations of thermodynamic properties, such as activity\slash fugacity 
+coefficients (sometimes using computationally demanding models such as \citet{Pitzer1973} for aqueous 
+phases and \citet{Peng1976} for gaseous/liquid phases).
 
-Thus, speeding up reactive transport modeling by a significant factor
-may only be accomplished by first accelerating chemical reaction calculations
-in general, and chemical equilibrium calculations in particular. The
-latter is essential when employing a \emph{partial local chemical
-equilibrium assumption} \citep{Ramshaw1980,Ramshaw1981,Ramshaw1985,Ramshaw1995,Lichtner1985,Steefel1994,Steefel1996}.
-This assumes that species reacting at relatively high rates (e.g.,
-aqueous, gaseous species) are under continual chemical equilibrium
-at every point in space, whereas species reacting at slow to moderate
-rates (e.g., mineral species) do so according to kinetic rate laws.
-Thus, accelerating those millions to billions of chemical equilibrium
-calculations over the course of massive numerical reactive transport
-simulations is essential when using fine-resolution meshes, large
-three-dimensional domains, and\slash or long simulation times at fine
-temporal resolutions.
+Thus, speeding up reactive transport modeling by a significant factor may only be accomplished by 
+first accelerating chemical reaction calculations in general. Advancing chemical equilibrium speciation calculations is essential when employing a \emph{partial local chemical equilibrium assumption} \citep{Ramshaw1980,Ramshaw1981,Ramshaw1985,Ramshaw1995,Lichtner1985,Steefel1994,Steefel1996}.
+This assumes that the species that are reacting at relatively high rates (typically aqueous or gaseous species) are in a state of continual chemical equilibrium in each mesh cell. In contrast, the species reacting at slow to moderate rates (typically minerals) do so according to kinetic rate laws and, 
+hence, are not in equilibrium with the rest of the system. Thus, accelerating those millions to 
+billions of chemical calculations over the course of a massive numerical reactive transport simulation 
+is essential when using fine-resolution meshes, large three-dimensional domains, and\slash or long 
+simulation times at fine temporal resolution.
 
-Major advances in developing fast, accurate, and robust methods for
-chemical equilibrium calculations have been done for the past decades.
-These are either based on the\emph{ Gibbs energy minimization} (GEM)
-or the \emph{law of mass action} (LMA) formulations \citep{White1958,Smith1980,Smith1982,Alberty1992b,Crerar1975,DeCapitani1987,Eriksson1989,Ghiorso1994,Gordon1971,Gordon1994a,Gordon1996,Harvey2013,Harvie1987,Karpov1997,Karpov2001,Karpov2002,Koukkari2011a,Kulik2013,Leal2013,Leal2014,Leal2016a,Leal2016c,Leal2017,Morel1972,Neron2012,Nordstrom1979,Trangenstein1986,VanZeggeren1970,Vonka1995,Wolery1975,Zeleznik1960}.
-However, even if one could devise a hypothetical algorithm that would
-always converge in a single iteration, instead of the typical few
-to dozens of iterations, the computational cost of chemical equilibrium
-calculations could still be dominant in a reactive transport simulation.
-This is because, in this single iteration, we would still need to
-evaluate expensive thermodynamic models and solve a matrix equation
-when using a Newton-based GEM or LMA algorithm. A substantial acceleration
-of these simulations can thus be achieved if these costly operations
-can be bypassed whenever possible\emph{.}
+Major advances in developing fast, accurate, and robust methods for chemical equilibrium calculations, 
+in particular, have been achieved over the past decades. These are either based on \emph{Gibbs energy minimization} (GEM) or \emph{law of mass action} (LMA) formulations \citep{White1958,Smith1980,Smith1982,Alberty1992b,Crerar1975,DeCapitani1987,Eriksson1989,Ghiorso1994,Gordon1971,Gordon1994a,Gordon1996,Harvey2013,Harvie1987,Karpov1997,Karpov2001,Karpov2002,Koukkari2011a,Kulik2013,Leal2013,Leal2014,Leal2016a,Leal2016c,Leal2017,Morel1972,Neron2012,Nordstrom1979,Trangenstein1986,VanZeggeren1970,Vonka1995,Wolery1975,Zeleznik1960}.
+%
+However, even if one could devise a hypothetical algorithm that would always converge in a single 
+iteration, instead of the typical few to dozens of iterations, the computational cost of chemical 
+equilibrium calculations could still be dominant in a reactive transport simulation. This is the case, 
+as during this single iteration, expensive thermodynamic models would still have to be evaluated and 
+matrix equations be solved, when using a Newton-based GEM or LMA algorithm. In view of this, a 
+substantial acceleration of these calculations can be achieved if those costly operations
+can be bypassed whenever possible. Similarly, advanced methods for solving system of ODEs has been 
+developed during last ** decades {\color{red}\cite{}}. However, we aim to develop such an approach that 
+sidesteps costly numerical integration of the system that governs the evolution of kinetics species 
+within considered transport step.
 
-During a time step of a reactive transport simulation, chemical equilibrium
-calculations are needed in all mesh cells. Often, many of these calculations
-are similar to previously performed ones, either within the same time-step
-and\slash or mesh cell or at different points in space and\slash or
-time. We say two chemical equilibrium problems are similar when their
+\begin{figure}[!t]
+	\centering
+	\subfloat[$\vectoru(x, y, t)$]{
+	\includegraphics[width=7cm]{pics/example-1/displacement-n-1001.pdf}
+	\label{fig:similar-equilibrium}}
+	\quad
+	\subfloat[$p(x, y, t)$]{
+	\includegraphics[width=7cm]{pics/example-1/pressure-n-1001-cells-16384-vertices-8321.pdf}
+	\label{fig:similar-kinetics}}
+	\caption{Pair of the exact solutions $(u, p)$.}
+	\label{fig:similar-equilibrium-kinetics}
+\end{figure}
+
+During a single time step of a reactive transport simulation, chemical kinetics and equilibrium
+calculations are needed in all mesh cells. Often, many of these calculations are similar to previously performed ones, either within the same time-step and\slash or mesh cell or at different points in space and\slash or time (see Figure \ref{}). We assume two chemical equilibrium problems to be similar when their
 input conditions are sufficiently close (i.e., similar temperature,
-pressure, amounts of chemical elements and electric charge of each
-phase containing electrically charged species \citep{Smith1982}).
+pressure, amounts of chemical elements, and the electric charge of each
+phase, containing electrically charged species \citep{Smith1982}).
 These chemical equilibrium calculations are hardly identical so that
-we can not simply assume a previously computed result as the exact
+we cannot simply assume a previously computed chemical speciation as the exact
 result of the new calculation. Interpolating is also not an appropriate
-approach because it can violate mass conservation of elements (i.e.,
+approach, as it can violate the \emph{mass conservation} of elements (i.e.,
 there is a deviation between the input element amounts and the amounts
 of elements calculated from the interpolated species amounts).
 
-The principle of the \emph{smart chemical equilibrium algorithm} discussed
-here is exactly to \emph{avoid} as much as possible full and expensive
-chemical equilibrium calculations during the reactive transport simulation.
-By using \emph{sensitivity derivatives} of previously computed equilibrium
+The main principle of the \emph{algorithm}, suggested here, is precisely to \emph{avoid} as much as possible full and expensive
+chemical equilibrium speciation calculations during the reactive transport simulation. 
+That is why it is often referred as \emph{smart chemical equilibrium algorithm}.
+By using \emph{sensitivity derivatives} of previously computed chemical equilibrium
 states, we can quickly and accurately estimate the new equilibrium
-state at similar input conditions. These derivatives tell us how sensitive
+state (chemical speciation) under similar input conditions. These derivatives provide an insight on how sensitive
 the computed species amounts at a certain equilibrium state are with
-respect to infinitesimal changes in temperature, pressure, and element
-amounts. Thus, multiplying these sensitivity derivatives by respective
+respect to infinitesimally small changes in temperature, pressure, and amounts of chemical elements. Thus, multiplying these sensitivity derivatives by the respective
 differences in input conditions (e.g., differences in temperature
-or the amount of a particular element), we can estimate the variation
+or the amount of a particular element), we can predict the variation
 in the output. For example, we can estimate how much the species amounts
 would change by increasing temperature by 1~°C, by adding 1~mmol
 of HCl into the system (which is equivalent to adding 1~mmol of elements
 H and Cl), or by combining these with other input changes. We remark
-that the use of sensitive derivatives to estimate the solution of
-an equilibrium problem is inherently \emph{mass conservative}. This
-is because these derivatives are computed by deriving the chemical
-equilibrium equations, which include the equations of element mass
-conservation.
-
+that the use of sensitivity derivatives to estimate the solution of
+an equilibrium problem is inherently \emph{mass conservative}, since they are being computed along the derivation of chemical equilibrium equations (with equations of element mass conservation included).
 
 \subsubsection*{Related Work}
 
