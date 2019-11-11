@@ -184,7 +184,7 @@ found in \cite{Singer2004, Singer2006, Lu2007, Pope2009, Lu2009}.
 %
 A series of parallel chemistry acceleration algorithms using different distribution strategies for
 simulation of unsteady, compressible, reactive flows, based on the ISAT technique, was implemented in 
-the software \texttt{\href{https://tcg.mae.cornell.edu/x2f_mpi/}{x2f_mpi}} \cite{x2fmpi2006} and 
+the software \texttt{\href{https://tcg.mae.cornell.edu/x2f_mpi/}{${\rm x2f_mpi}$}} \cite{x2fmpi2006} and 
 studied for the numerical simulations of a two-dimensional gaseous detonation wave propagation process 
 in \citet{Dong2007, Dong2009, WuDongLi2018}. 
 
@@ -276,189 +276,287 @@ which can loose precision or fail in this respect.
 %---------------------------------------------------------------------------------------------------%
 \subsubsection*{Organization}
 
-This communication is organized as follows:
+This report is organized as follows:
 \begin{description}
-\item [{Section~\ref{sec:Definitions-and-Notation}}] introduces definitions
-and the notation needed to describe the algorithm.
-\item [{Section~\ref{sec:Method}}] formulates the smart chemical equilibrium
-algorithm with details regarding the learning and prediction operations.
-\item [{Section~\ref{sec:Results}}] demonstrates the performance and
-accuracy of a reactive transport simulation, using the smart chemical equilibrium
-algorithm.
-\item [{Section~\ref{sec:Discussion-and-Conclusions}}] discusses implications
-and conclusions of this study together with a road-map for
-further research efforts in this direction, in particular, extending the smart on-demand learning algorithm to chemical reaction kinetics calculations.
+\item [{Section~\ref{sec:Definitions-and-Notation}}] introduces definitions and the notation needed 
+to describe the algorithm.
+\item [{Section~\ref{sec:Method}}] formulates the smart chemical equilibrium algorithm with details 
+regarding the learning and prediction operations.
+\item [{Section~\ref{sec:Results}}] demonstrates the performance and accuracy of a reactive transport 
+simulation, using the smart chemical equilibrium / kinetics algorithms. It consists of three part 
+with results corresponding to three major stages of development of smart algorithm. The first tests
+of the algorithm were focused on studying its performance in RT model with all the species controlled
+by equilibrium and with Pitzer activity model used (see Subsection \ref{subsec:part-1}). Subsection
+\eqref{subsec:part-2} is dedicated to describe the performance of smart approach on the chemical system 
+with kinetically controlled species. Finally, Subsection \eqref{subsec:part-3} highlights results of 
+RT simulations obtained after coupling Reaktoro to the Firedrake, an automated system for the solution 
+of partial differential equations using the finite element method (FEM) \cite{Rathgeber2016}. 
+\item [{Section~\ref{sec:Discussion-and-Conclusions}}] discusses implications and conclusions of 
+this report together with a road-map for further research efforts in this direction.
 \end{description}
 
 %---------------------------------------------------------------------------------------------------%
 \section{Definitions and Notation\label{sec:Definitions-and-Notation}}
 
-Considered throughout the paper, a \emph{chemical system} is a collection
-of \emph{chemical species} composed of one or more \emph{elements}
-and distributed among one or more \emph{phases}. The species can be
-substances such as aqueous ions (e.g., Na$^{+}$(aq), Cl$^{-}$(aq),
-HCO$_{3}^{-}$(aq)), neutral aqueous species (e.g., SiO2(aq), CO$_{2}$(aq),
-H$_{2}$O(l)), gases (e.g., CO$_{2}$(g), CH$_{4}$(g), N$_{2}$(g)),
-pure condensed phases (e.g., CaCO$_{3}$(s, calcite), SiO$_{2}$(s,
-quartz), Al$_{2}$Si$_{2}$O$_{5}$(OH)$_{4}$(s, kaolinite)), etc. Each
-phase (e.g., aqueous, gaseous, liquid, solid solutions, a pure mineral,
-plasma, etc.), having homogeneous properties within its boundaries is composed of one or more different chemical species (components, end members). Multi-component phases are also called \emph{solutions}, where components are mixed within the same structure.  The elements (independent components)
-are \emph{chemical elements }(e.g., H, O, C, Na, Cl, Ca, Si) and \emph{electrical
-charge} (Z), but can also be linear combinations of these, commonly
-known as \emph{primary species} (e.g., H$^{+}$(aq), H$_{2}$O(l),
-CO$_{2}$(aq)).
+Considered throughout the paper, a \emph{chemical system} is a collection of \emph{chemical species} 
+composed of one or more \emph{elements} and distributed among one or more \emph{phases}. The species 
+can be substances such as aqueous ions (e.g., Na$^{+}$(aq), Cl$^{-}$(aq), HCO$_{3}^{-}$(aq)), neutral 
+aqueous species (e.g., SiO2(aq), CO$_{2}$(aq), H$_{2}$O(l)), gases (e.g., CO$_{2}$(g), CH$_{4}$(g), 
+N$_{2}$(g)), pure condensed phases (e.g., CaCO$_{3}$(s, calcite), SiO$_{2}$(s, quartz), 
+Al$_{2}$Si$_{2}$O$_{5}$(OH)$_{4}$(s, kaolinite)), etc. Each phase (e.g., aqueous, gaseous, liquid, 
+solid solutions, a pure mineral, plasma, etc.), having homogeneous properties within its boundaries 
+is composed of one or more different chemical species (components, end members). Multi-component 
+phases are also called \emph{solutions}, where components are mixed within the same structure.  
+The elements (independent components) are \emph{chemical elements} (e.g., H, O, C, Na, Cl, Ca, Si) 
+and \emph{electrical charge} (Z), but can also be linear combinations of these, commonly known as 
+\emph{primary species} (e.g., H$^{+}$(aq), H$_{2}$O(l), CO$_{2}$(aq)).
 
-A chemical system can exist at infinitely many \emph{chemical states}.
-A chemical state is defined here as the triplet $(T, P, n)$, where
-$T$ is temperature, $P$ is pressure, and $n=(n_{1},\ldots,n_{\mathrm{N}})\in\mathbb{R}^{\text{N}}$
-is the vector of species amounts (speciation), with $n_{i}$ denoting the amount
-of the $i$th species (in moles) and N the number of species. The vector of element
-amounts $b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{\text{E}}$ with $b_{j}$ being the amount of the $j$th element (in moles) and $\text{E}$
-the number of elements, is related to $n$ via the following mass
-conservation equation:
+A chemical system can exist at infinitely many \emph{chemical states}. A chemical state is defined 
+here as the quadruplet $(T, P, n, b)$, where $T$ is temperature, $P$ is pressure,  
+$n=(n_{1},\ldots,n_{\mathrm{N}})\in\mathbb{R}^{\text{N}}$ is the vector of species amounts 
+(speciation), with $n_{i}$ denoting the amount of the $i$th species (in moles) and N the number of 
+species, and $b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{\text{E}}$ is the vector of element 
+amounts with $b_{j}$ being the amount of the $j$th element (in moles) and $\text{E}$ the number of 
+elements. In general, $b$ is related to $n$ via the following mass conservation equation:
+%
 \begin{equation}
-An=b,\label{eq:mass-balance}
+An=b,
+\label{eq:mass-balance}
 \end{equation}
-where $A$ is the \emph{formula matrix }of the chemical system \citep{Smith1982}
-(whose dimensions are $\mathrm{E}\times\mathrm{N}$), with $A_{ji}$
-denoting the coefficient of the $j$th element in the $i$th species.
+%
+where $A$ is the \emph{formula matrix} of the chemical system \citep{Smith1982} (whose dimensions 
+are $\mathrm{E}\times\mathrm{N}$), with $A_{ji}$ denoting the coefficient of the $j$th element in 
+the $i$th species.
 
+In order to consider system with kinetically controlled species, we assume the partition of the 
+speciation to equilibrium and the kinetic species with corresponding amounts $n_{e}$ and $n_{k}$ and 
+bulk compositions $b_{e}$ and $b_{k}$. Then, the total amount of chemical species is presented as 
+\[
+n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix}:\mathbb{R}^{N}\rightarrow\mathbb{R}^{N}
+\]
+with the formula matrix $A=\begin{bmatrix}A_{e}\,A_{k}\end{bmatrix}$ composed of 
+matrices of the equilibrium and kinetic species $A_{e}$ and $A_{k}$, respectively. 
+
+%---------------------------------------------------------------------------------------------------%
 \section{Method\label{sec:Method}}
 
-Let a chemical equilibrium calculation be represented by the following
-function:
+Let the dependence of $n_{e}$ from $b_{e}$ is prescribed by the abstract chemical equilibrium function 
+%
 \begin{equation}
-n=\varphi(T,P,b),\label{eq:equilibrium-func}
+n_{e}=\varphi(b_{e}),\varphi:\mathbb{R}^{E}\rightarrow\mathbb{R}^{N},
+\label{eq:equilibrium-func}
 \end{equation}
-where $\varphi$ is an abstraction of the operations needed to solve
-the fundamental Gibbs energy minimization problem:
+%
+that encapsulates the specific algorithmic steps to solve the fundamental Gibbs energy minimization 
+problem
+%
+\[
+\varphi(b_{e}):={\rm argmin}_{n_{e}} G_{e} = n_{e}^{T} \mu_{e}
+\quad\mbox{s.t.}\quad
+\begin{cases}
+A_{e} \, n_{e} & =b_{e}\\
+n_{e} & \geq0
+\end{cases}.
+\label{eq:gem-problem}
+\]
+%
+The \emph{chemical potential} of the $i$th species $\mu_{e, i}=\mu_{e, i}(T,P,n)$ is defined as:
+%
 \begin{equation}
-\min_{n} G(T,P,n)\quad\text{subject to}\quad\left\{ \begin{aligned}An=b\\
-n\geq0
-\end{aligned}
-\right.,\label{eq:gem-problem}
+\mu_{e, i}=\mu_{e, i}^{\circ}+RT\ln a_{e, i},
 \end{equation}
-at a prescribed temperature $T$, pressure $P$, and element amounts
-$b=(b_{1},\ldots,b_{\mathrm{E}})$. In this problem, one aims to find
-$n=(n_{1},\ldots,n_{\mathrm{N}})$ that minimizes the total Gibbs energy
-function of the system: 
-\begin{equation}
-G=\sum_{i=1}^{\text{N}}\mu_{i}n_{i},
-\end{equation}
-subject to the elemental mass conservation constraint equations $An=b$
-and the non-negativity constraints for the species amounts, $n_{i}\geq0$.
-The \emph{chemical potential} of the $i$th species $\mu_{i}=\mu_{i}(T,P,n)$
-is defined as:
-\begin{equation}
-\mu_{i}=\mu_{i}^{\circ}+RT\ln a_{i},
-\end{equation}
-with $R$ denoting the universal gas constant, $\mu_{i}^{\circ}=\mu_{i}^{\circ}(T,P)$
-the \emph{standard chemical potential} of the $i$th species, and
-$a_{i}=a_{i}(T,P,n)$ the \emph{activity} of the $i$th species. Methods
-for solving chemical equilibrium problem using either Gibbs energy
-minimization (GEM) or law of mass action (LMA) methods are addressed
-in Appendix~\ref{subsec:Chemical-equilibrium-equations} or with
-more detail in \citet{Leal2016a,Leal2016c,Leal2017} and references
-therein.
+%
+with $R$ denoting the universal gas constant, $\mu_{e, i}^{\circ}=\mu_{e, i}^{\circ}(T,P)$ the 
+\emph{standard chemical potential} of the $i$th species, and $a_{e, i}=a_{e, i}(T,P,n)$ the 
+\emph{activity} of the $i$th species. Methods for solving chemical equilibrium problem using either 
+Gibbs energy minimization (GEM) or law of mass action (LMA) methods are addressed in 
+Appendix~\ref{subsec:Chemical-equilibrium-equations} or with more detail in 
+\citet{Leal2016a,Leal2016c,Leal2017} and references therein.
 
-{\color{red}{TODO: kinetics}}
+%---------------------------------------------------------------------------------------------------%
+The amounts of the kinetic species $n_{k}$ are governed by the system of ordinary differential 
+equations
+%
+\begin{equation}
+\begin{array}{r@{$\;$}l@{$\quad$}l}
+	\frac{dn_{k}}{dt} & = r(n_{k}) + q_{k} & t>0,\\
+                n_{k} & = n_{k}^{\circ}    & t=0,
+\end{array}
+\label{eq:kinetics}
+\end{equation}
+%
+%---------------------------------------------------------------------------------------------------%
+where $r$ are the \emph{rates} of the kinetically controlled reactions,  $q_{k}$ denotes 
+the \emph{vector of inflow/outflow} rates of the kinetic species, and $n_{k}^{\circ}$ 
+the \emph{initial amounts} of the kinetic species. For more detailed derivation of 
+the differential-algebraic system that governs \emph{chemical state of a system} we refer to 
+Appendix~\ref{subsec:Chemical-kinetics-equations} or with more detail in 
+\citet{Leal2015,Leal2017} and references therein.
 
 \subsection{First-Order Taylor Approximation\label{subsec:First-order-Taylor-approximation}}
 
-\begin{comment}
-Same thing, T*, P*, b*, nk* vs T,P,b,nk in the general case. It is easy to imagine a situation when T,P,and b remain constant, but time has changed, and therefore nk has changed by some kinetic rate laws).
-
-here, the time derivatives come in naturally, if the general T,P,b,nk concept is used together with the associated kinetic rate laws!
-\end{comment}
-Assume that a chemical equilibrium calculation has been performed previously
-with input conditions $(T^{\star},P^{\star},b^{\star})$, and a new
-one needs to be performed with $(T,P,b)$ instead. Rather than computing
-$n=\varphi(T,P,b)$, using the computationally expensive equilibrium
-function $\varphi$ (cf. \ref{eq:equilibrium-func}), we first try
-estimating $\bar{n}=(\bar{n}_{1},\ldots,\bar{n}_{\mathrm{N}})$ with
-a \emph{first-order Taylor approximation}:
+%---------------------------------------------------------------------------------------------------%
+Assume that a chemical equilibrium calculation has been performed previously with input conditions
+$(T^{\star},P^{\star},b^{\star})$, and a new one needs to be performed with $(T,P,b)$ instead. 
+Rather than computing $n_e=\varphi(T,P,b_e)$, using the computationally expensive equilibrium 
+function $\varphi$ (cf. \ref{eq:equilibrium-func}), we first try estimating $\bar{n}_e$ with a 
+\emph{first-order Taylor approximation}:
+%
 \begin{equation}
-\bar{n}=n^{\star}+\frac{\partial\varphi}{\partial T}^{\star}(T-T^{\star})+\frac{\partial\varphi}{\partial P}^{\star}(P-P^{\star})+\frac{\partial\varphi}{\partial b}^{\star}(b-b^{\star}),\label{eq:smart-estimate}
+\bar{n} = 
+n^{\star}+\frac{\partial\varphi}{\partial T}^{\star}(T-T^{\star})
++\frac{\partial\varphi}{\partial P}^{\star}(P-P^{\star})
++\frac{\partial\varphi}{\partial b}^{\star}(b-b^{\star}),
+\label{eq:smart-estimate}
 \end{equation}
-where $(\partial\varphi/\partial T)^{\star}$, $(\partial\varphi/\partial P)^{\star}$,
-and $(\partial\varphi/\partial b)^{\star}$ are \emph{sensitivity
-derivatives} of the reference chemical equilibrium state, which can
-be equivalently written as $(\partial n/\partial T)^{\star}$, $(\partial n/\partial P)^{\star}$,
-and $(\partial n/\partial b)^{\star}$, respectively. If computed together with the full speciation vector $n$, these sensitivity
-derivatives will allow us to estimate how the species amounts in an equilibrium
-state change when small perturbations are applied to temperature,
-pressure, and\slash or amounts of elements, and, therefore, quickly and accurately estimate entirely new states in the
-vicinity of some previous and fully calculated chemical equilibrium
-state.
+%
+where $(\partial\varphi/\partial T)^{\star}$, $(\partial\varphi/\partial P)^{\star}$, and 
+$(\partial\varphi/\partial b)^{\star}$ are \emph{sensitivity derivatives} of the reference chemical 
+equilibrium state, which can be equivalently written as $(\partial n/\partial T)^{\star}$, 
+$(\partial n/\partial P)^{\star}$, and $(\partial n/\partial b)^{\star}$, respectively. If computed 
+together with the full speciation vector $n$, these sensitivity derivatives will allow us to estimate 
+how the species amounts in an equilibrium state change when small perturbations are applied to 
+temperature, pressure, and\slash or amounts of elements, and, therefore, quickly and accurately 
+estimate entirely new states in the vicinity of some previous and fully calculated chemical 
+equilibrium state.
 
+%---------------------------------------------------------------------------------------------------%
+In case, of kinetically controlled species similar logic can be applied. We use the sensitivities 
+of species $n_k$ w.r.t. the small perturbation in initial condition $n_k^\circ$ defined as
+%
+\[
+\frac{\partial n_k}{\partial n_k^\circ}. 
+\]
+%
+%---------------------------------------------------------------------------------------------------%
+Let $\Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be stored along with $n^\star_k$ 
+as a result of numerical integration of the system \eqref{eq:kinetics} with initial state 
+$\big(n^\circ_k\big)^\star$. Then, evaluating new chemical state the initial condition $n^\circ_k$, 
+the kinetic species can be approximated as follow:
+%
+\begin{equation}
+\bar{n}_k 
+= n^\star_k + \delta n_k
+= n^\star_k + \Big(\tfrac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
+\big(n^\circ_k - (n^\circ_k)^\star \big)
+\label{eq:smart-estimate-kinetics}
+\end{equation}
+%
+If $\bar{n}_k$ is accurate enough, the complex numerical integration of the system 
+\eqref{eq:kinetics} is replaced by matrix-vector multiplication formula 
+\eqref{eq:smart-estimate-kinetics}. 
 
+\begin{comment}
+% more detailed explanation
+
+%---------------------------------------------------------------------------------------------------%
+In case, of kinetically controlled species similar logic can be applied. We introduce the property 
+that measures how sensitive species $n_k$ w.r.t. the choice of initial condition $n_k^\circ$. It is
+called \emph{sensitivity} and defined as
+%
+\[
+s(t) := \frac{\partial n_k}{\partial n_k^\circ}(t). 
+\]
+%
+%---------------------------------------------------------------------------------------------------%
+Let $s^\star = \Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be evaluated and stored 
+along with $n^\star_k$ after numerical integration has been performed with initial state 
+$\big(n^\circ_k\big)^\star$. Then, provided with a new initial condition for the kinetic species 
+$n^\circ_k$, $\bar{n}_k$ can be approximated as follow:
+%
+\begin{equation}
+\bar{n}_k 
+= n^\star_k + \delta n_k
+= n^\star_k + s^\star \, \delta n^\circ_k 
+= n^\star_k + \Big(\tfrac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
+\big(n^\circ_k - (n^\circ_k)^\star \big)
+\label{eq:smart-estimate-kinetics}
+\end{equation}
+%
+Analogously to Eq. \ref{eq:smart-estimate}, the complex numerical integration of the system 
+\eqref{eq:kinetics} is replaced by matrix-vector multiplication formula 
+\eqref{eq:smart-estimate-kinetics}. Here, sensitivity is a matrix $s\in\mathbb{R}^{N\times N}$ that 
+satisfies the following system of ODEs
+% 
+\begin{align*}
+\frac{d s}{dt} & = J_r (n) \, s & t>0,\\
+             s & = I            & t=0,
+\end{align*}
+%
+where ${J}_{r}$ is a Jacobian of $r(n_k)$, and ${I} \in \mathbb{R}^{N \times N}$ is the identity 
+matrix.
+\end{comment}
+
+%---------------------------------------------------------------------------------------------------%
 \subsection{Nearest Neighbor Search\label{subsec:Nearest-Neighbor-Search}}
 
-Let $\mathcal{I}$ represent the set of input conditions for the chemical
-equilibrium problems that have been fully solved (i.e., using the
-chemical equilibrium function $\varphi$):
+Let $\mathcal{I}_e$/$\mathcal{I}_k$ represent the sets of input conditions for the chemical 
+equilibrium/kinetics problems that have been fully solved (i.e., using the chemical equilibrium 
+function $\varphi$ or system of ODEs \eqref{eq:kinetics}):
+%
 \begin{equation}
-\mathcal{I}=\left\{ (T^{k},P^{k},b^{k})\right\} _{k=1}^{\text{K}}.
+\mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{\text{I}} 
+\qquad \mbox{or} \qquad 
+\mathcal{I}_k =\left\{ (n^j_k)\right\}_{j=1}^{\text{J}}.
 \end{equation}
-Furthermore, let $d^{k}$ denote the Euclidean distance from $(T^{k},P^{k},b^{k})$,
-the input condition of the $k$th fully solved problem, to $(T,P,b)$,
-the given input condition for the new equilibrium calculation:
+%
+Furthermore, let $d^{i}$ denote the Euclidean distance from $(T^{i},P^{i},b^{i})$, the input 
+condition of the $i$th fully solved problem, to $(T,P,b)$, the given input condition for the new 
+equilibrium/kinetics calculation:
+%
 \begin{equation}
-d^{k}=\left[\left(T-T^{k}\right)^{2}+\left(P-P^{k}\right)^{2}+\sum_{j=1}^{\text{E}}\left(b_{j}-b_{j}^{k}\right)^{2}\right]^{\frac{1}{2}}\qquad k=1,\ldots,\mathrm{K}.
+d^{i}=\left[\left(T-T^{i}\right)^{2} 
++\left(P-P^{i}\right)^{2}
++\sum_{j=1}^{\text{E}}\left(b_{j}-b_{j}^{i}\right)^{2}\right]^{\frac{1}{2}} 
+\qquad i=1,\ldots,\mathrm{I}.
 \end{equation}
 
-For the first-order Taylor approximation presented before (Eq.~\ref{eq:smart-estimate}),
-a potentially suitable candidate for $(T^{\star},P^{\star},b^{\star})$
-is the \emph{nearest neighbor (NN)} of $(T,P,b)$ among all inputs in $\mathcal{I}$
-(i.e., saved input with the shortest Euclidean distance to $(T,P,b)$).
-Note that other norms can be used to define distance, although
-we obtained convincing results with the Euclidean norm.
+%---------------------------------------------------------------------------------------------------%
+For the first-order Taylor expantion presented in (Eq.~\ref{eq:smart-estimate} or 
+Eq.~\ref{eq:smart-estimate-kinetics}), a potentially suitable candidate for 
+$(T^{\star},P^{\star},b_e^{\star})$ or $(n^\circ_k)^\star$ is the \emph{nearest neighbor (NN)} of 
+$(T,P,b)$ or $n^\circ_k$ among all inputs in $\mathcal{I}_e$ or $\mathcal{I}_k$ (i.e., saved input 
+with the shortest Euclidean distance to $(T,P,b)$ or $n^\circ_k$). Note that other norms and 
+strategies can be used to define the most optimal reference element for the prediction.
 
-Plenty of algorithms have been reported in the literature to conduct a fast multi-dimensional NN search. The use of \emph{kd-tree
-data structures} to store the inputs, for example, may permit us to
-obtain an algorithm complexity $\log_{2}(\mathrm{K})$, where $\mathrm{K}$
-is the number of entries in the set. This implies that in a set with
-1024~entries, only about 10 distance comparisons are performed. This contrasts with a linear search algorithm, with complexity $O(\mathrm{K})$,
-which would instead require 1024 corresponding evaluations and
-comparisons.
+Plenty of algorithms have been reported in the literature to conduct a fast multi-dimensional NN 
+search. The use of \emph{kd-tree data structures} to store the inputs, for example, may permit us to
+obtain an algorithm complexity $\log_{2}(\mathrm{K})$, where $\mathrm{K}$ is the number of entries 
+in the set. This implies that in a set with 1024~entries, only about 10 distance comparisons are 
+performed. This contrasts with a linear search algorithm, with complexity $O(\mathrm{K})$,
+which would instead require 1024 corresponding evaluations and comparisons.
 
-The above algorithms, however, may behave very differently, depending on
-the number and dimension of the input vectors collected. Tree data
-structures have a more sparse memory pattern than contiguous memory
-data structures, such as arrays\slash vectors. The portions of the
-data for the latter can be cached by the CPU, enabling 
-processing them at much faster rates. This implies that for sufficiently
-small data-sets (e.g, with dozens to perhaps a few hundred entries),
-tree-based search algorithms could be sub-optimal. Under these circumstances,
-a linear search algorithm, conjugated with contiguous memory data
-structures, can be more efficient.
+%---------------------------------------------------------------------------------------------------%
+The above algorithms, however, may behave very differently, depending on the number and dimension 
+of the input vectors collected. Tree data structures have a more sparse memory pattern than 
+contiguous memory data structures, such as arrays\slash vectors. The portions of the data for the 
+latter can be cached by the CPU, enabling processing them at much faster rates. This implies that 
+for sufficiently small data-sets (e.g, with dozens to perhaps a few hundred entries), tree-based 
+search algorithms could be sub-optimal. Under these circumstances, a linear search algorithm, 
+conjugated with contiguous memory data structures, can be more efficient.
 
-A combination of tree-based and linear search algorithms is then needed.
-We can start with a linear search approach, since initially there are
-not many saved inputs of learned chemical equilibrium problems. Once
-a certain number of inputs have been saved, we construct a kd-tree.
-This approach should enable constructing more well-balanced kd-trees
-(i.e., trees, where sibling branches have a similar number of entries),
-and thus ensure faster search operations close to $\log_{2}(K)$ complexity.
-
-In this proof-of-concept work, we have relied solely on a linear search
-algorithm, which worked well in the acceleration of the reactive transport
-problem shown in Section~\ref{sec:Results}. Complementing
+In the first version of the algorithm implementation, we have relied solely on a linear search
+algorithm, which worked well in the acceleration of the reactive transport problem (assuming all the 
+species are controlled by equilibrium) shown in Section~\ref{sec:Results}. Complementing
 the computer implementation of the smart chemical equilibrium algorithm
 with kd-tree/locality-sensitive hashing search algorithms is ongoing work.
-
-\begin{comment}
-Comment DK: perhaps, can be combined with using an efficient in-memory cache database or key-value store such as ArangoDB, Tarantool, or Redis
-\end{comment}
 
 \subsection{Acceptance Test}
 
 \begin{figure}
 \begin{centering}
-\includegraphics{figures/equilibrium/algorithm-flowchart-with-star}
+\includegraphics{figures/equilibrium/algorithm-flowchart-for-equilibrium}
 \par\end{centering}
-\caption{\label{fig:algorithm-diagram}Diagram of the smart chemical equilibrium
-algorithm.}
+\caption{\label{fig:algorithm-diagram}
+Diagram of the smart chemical equilibrium algorithm.}
+\end{figure}
+
+\begin{figure}
+\begin{centering}
+\includegraphics{figures/equilibrium/algorithm-flowchart-for-equilibrium}
+\par\end{centering}
+\caption{\label{fig:algorithm-diagram}
+Diagram of the smart chemical kinetics algorithm.}
 \end{figure}
 
 Once a predicted chemical equilibrium state is calculated, it must
@@ -516,16 +614,20 @@ activities:
 \end{equation}
 Note, however, that activities are in general less sensitive to temperature
 variations than standard chemical potentials, so that the above alternative
-acceptance test would be less complete than equation~(\ref{eq:acceptance-test-mu})
+acceptance test would be less complete than Eq.~(\ref{eq:acceptance-test-mu})
 and more indifferent towards temperature changes. To fix this, one could use the approach detailed in \citet{Leal2016b} that permits
 apparent standard chemical potentials of the species to be calculated
 using equilibrium constants of reactions.
 
-
-{\color{red}
-TODO: 
-Acceptance for kinetics.
-}
+For kinetic species, we test the variation in the kinetic rates, i.e., 
+%
+\begin{equation}
+|d r_i|  \leq \epsilon_{{\rm  rel}} |\ln r_{i}^{\star}| + 
+                   \epsilon_{{\rm  abs}} \qquad (i=1,\ldots,{\rm N_k}),
+\label{eq:acceptance-test-rates}
+\end{equation}
+%
+where $\delta r_i = \tfrac{d r^i}{d n_k} \delta n$.
 
 \subsection{Smart Chemical Equilibrium Algorithm \label{subsec:Smart-chemical-equilibrium}}
 
@@ -607,6 +709,8 @@ which will be followed by more advanced demonstrations in future work
 some details on the injection fluid and rock composition, transport
 parameters, and numerical discretization.}
 \end{figure}
+
+\subsection{Pitzer activity model. Local equilibrium assumption.  \label{subsec:part-1}}
 
 In the chemical model part, the activity coefficients of the aqueous species are calculated using
 the Pitzer model \citep{Pitzer1973}, formulated by \citet{Harvie1984},
@@ -1468,6 +1572,39 @@ calculations in reactive transport simulations is already underway.
 This smart chemical equilibrium strategy with on-demand learning has been implemented in Reaktoro (\href{https://www.reaktoro.org}{reaktoro.org}), a unified
 open-source framework for modeling chemically reactive systems.
 
+
+\subsection{Plans}
+%---------------------------------------------------------------------------------------------------%
+A combination of tree-based and linear search algorithms is then needed. We can start with a linear 
+search approach, since initially there are not many saved inputs of learned chemical equilibrium 
+problems. Once a certain number of inputs have been saved, we construct a kd-tree. This approach 
+should enable constructing more well-balanced kd-trees (i.e., trees, where sibling branches have a 
+similar number of entries), and thus ensure faster search operations close to $\log_{2}(K)$ complexity.
+
+Alternatively, \emph{locality-sensitive hashing}, the algorithm that hashes similar input items into 
+the so-called ``buckets'' with high probability, can be considered. This technique can also be used 
+for data clustering, since the space of stored $\mathcal{I}_e$ and $\mathcal{I}_k$ can be heavily 
+clustered. This approach attempts to reduce the dimensional of $k$-dimensional data by providing 
+low-dimensional representation of the latter while preserving relative distances between items.
+%
+\begin{comment}
+TO CHECK:
+https://github.com/simonemainardi/LSHash
+https://github.com/salviati/slash
+https://github.com/DBWangGroupUNSW/SRS
+https://web.archive.org/web/20101203074412/http://www.vision.caltech.edu/malaa/software/research/image-search/
+http://web.mit.edu/andoni/www/LSH/index.html
+https://falconn-lib.org/
+\end{comment}
+%
+We also plan to investigate retrieval of the reference states based on the ranking system, giving the 
+higher priority of the most used chemical states to be considered first. This way, as soon as the acceptance 
+element satisfies certain considered criterion, we can terminate the search process.  
+
+
+Residual-based acceptance algorithm. 
+
+
 \section*{Acknowledgments}
 
 This research project is funded by the Swiss National Science Foundation,
@@ -1479,35 +1616,54 @@ for their financial support.
 
 \appendix
 
-\textbf{Coupling transport and kinetics.}\\
-\\
-Composition of each particle evolve according to the follwing set
-of ODEs:
+\section{Chemical Kinetics Equations \label{subsec:Chemical-kinetics-equations}}
 
-\begin{alignat*}{2}
-\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,\text{N}),
-\end{alignat*}
-where $T$ is the transport operator that consists of advection and
-diffusion, $R$ is reaction operator. First order splitting method:
-the solution advances from the time $t_{0}$ for a small time step
-$\Delta t$ in the following order:
-\begin{itemize}
-\item solve transpor equation, such that solution is denoted by $\overline{n}:$\_\\
+%---------------------------------------------------------------------------------------------------%
+The \textbf{principle of mass conservation} $\frac{dn}{dt}=q$ yields 
+%
+\[
+\frac{db}{dt}=\frac{db_{e}}{dt}+\frac{db_{k}}{dt}=Aq=A_{e}q_{e}+A_{k}q_{k},
+\label{eq:mass-concervation}
+\]
+%
+i.e., the amounts of the elements in the system $b$ vary according to the amounts of elements 
+entering/leaving the system as a result of the given inflow/outflow rates of chemical species $q$. 
+%
+At the same time, Eq. \ref{eq:kinetics} for kinetic species yields
+%
+\begin{align}
+\frac{db_{k}}{dt} & =A_{k}\nu_{k}^{T}r+A_{k}q_{k}.
+\label{eq:kinetics-with-b}
+\end{align}
+%
+%---------------------------------------------------------------------------------------------------%
+Combination of Eq. \ref{eq:mass-concervation} and \ref{q:kinetics-with-b} leads to
+%
+\[
+\frac{db_{e}}{dt}=A_{e}q_{e}-A_{k}\nu_{k}^{T}r.
+\]
+%
+Using the \emph{stoichiometric balance condition} $A\nu^{T}=A_{e}\nu_{e}^{T}r+A_{k}\nu_{k}^{T}r=0$, 
+which can be rewritten as $-A_{k} \, \nu_{k}^{T} \, r = A_{e}  \, \nu_{e}^{T} \, r$, we arrive at
+\[
+\frac{db_{e}}{dt} = A_{e}q_{e}-A_{k}\nu_{k}^{T}r = A_{e}(q_{e}+\nu_{e}^{T}r).
+\]
+%
+This means that the \emph{chemical state of a system} is govern by the following differential-algebraic 
+problem
+%
 \[
 \begin{cases}
-\frac{\partial\boldsymbol{n}}{\partial t} & =T(\boldsymbol{n})\\
-\boldsymbol{n}(t_{0}) & =\boldsymbol{n_{0}}
-\end{cases}
+\frac{dn_{k}}{dt}=\nu_{k}^{T}r+q_{k} & t>0\\
+\frac{db_{e}}{dt}=A_{e}(q_{e}+\nu_{e}^{T}r) & t>0\\
+n_{e}=\varphi(b_{e}) & t>0\\
+n_{k}=n_{k}^{\circ} & t=0\\
+n_{e}=n_{e}^{\circ} & t=0\\
+b_{e}=A_{e}n_{e}^{\circ} & t=0
+\end{cases},
 \]
-\item from the initial condition $\overline{n}$, solve the reaction equation
-to obtain $\tilde{\boldsymbol{n}}$:
-\[
-\begin{cases}
-\frac{\partial\boldsymbol{n}}{\partial t} & =T(\boldsymbol{n})\\
-\boldsymbol{n}(t_{0}) & =\boldsymbol{\overline{n}}
-\end{cases}
-\]
-\end{itemize}
+where $n=(n_{e}^{\circ},n_{k}^{\circ})$ is given initial condition.
+
 
 Open system:
 \begin{align*}
@@ -1592,11 +1748,11 @@ species $A=\begin{bmatrix}A_{e}\,A_{k}\end{bmatrix}$and
 of the stoichiometric matrix $\nu=\begin{bmatrix}\nu_{e}\,\nu_{k}\end{bmatrix}$
 \end{itemize}
 Dependence of $n_{e}$ from $b_{e}$ is prescribed by the chemical
-equilibrium function $n_{e}=\boldsymbol{\varphi}(b_{e}),\boldsymbol{\varphi}:\mathbb{R}^{E}\rightarrow\mathbb{R}^{N}$
+equilibrium function $n_{e}=\varphi(b_{e}),\varphi:\mathbb{R}^{E}\rightarrow\mathbb{R}^{N}$
 that encapsulates the specific algorithmic steps to solve the equilibrium
 problem
 \[
-\boldsymbol{\varphi}(b_{e}):={\rm argmin}_{\boldsymbol{n}_{e}}G_{e}=n_{e}^{T}\mu_{e}\quad\mbox{s.t.}\quad\begin{cases}
+\varphi(b_{e}):={\rm argmin}_{n_{e}}G_{e}=n_{e}^{T}\mu_{e}\quad\mbox{subject to}\quad\begin{cases}
 A_{e}n_{e} & =b_{e}\\
 n_{e} & \geq0
 \end{cases}.
@@ -1748,6 +1904,35 @@ solve these equations and how they are related to the conventional
 law of mass action equations, see \citet{Leal2016c,Leal2017}.
 
 \section{Reactive Transport Equations\label{sec:Reactive-Transport-Equations}}
+
+Composition of each particle evolve according to the follwing set
+of ODEs:
+
+\begin{alignat*}{2}
+\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,\text{N}),
+\end{alignat*}
+where $T$ is the transport operator that consists of advection and
+diffusion, $R$ is reaction operator. First order splitting method:
+the solution advances from the time $t_{0}$ for a small time step
+$\Delta t$ in the following order:
+\begin{itemize}
+\item solve transport equation, such that solution is denoted by $\overline{n}:$\\
+\[
+\begin{cases}
+\frac{\partial n}{\partial t} & =T(n)\\
+n(t_{0}) & =\boldsymbol{n_{0}}
+\end{cases}
+\]
+\item from the initial condition $\overline{n}$, solve the reaction equation
+to obtain $\tilde{n}$:
+\[
+\begin{cases}
+\frac{\partial n}{\partial t} & =T(n)\\
+n(t_{0}) & =\boldsymbol{\overline{n}}
+\end{cases}
+\]
+\end{itemize}
+
 
 The fundamental mass conservation equations for both fluid and solid
 species are:
