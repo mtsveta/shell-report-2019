@@ -329,8 +329,9 @@ are $\mathrm{E}\times\mathrm{N}$), with $A_{ji}$ denoting the coefficient of the
 the $i$th species.
 
 In order to consider system with kinetically controlled species, we assume the partition of the 
-speciation to equilibrium and the kinetic species with corresponding amounts $n_{e}$ and $n_{k}$ and 
-bulk compositions $b_{e}$ and $b_{k}$. Then, the total amount of chemical species is presented as 
+speciation to equilibrium and the kinetic species with corresponding amounts 
+$n_{e} \in \mathbb{R}^{N_e}$ and $n_{k} \in \mathbb{R}^{N_k} $ and bulk compositions 
+$b_{e}, b_{k} \in \mathbb{R}^{E}$. Then, the total amount of chemical species is presented as 
 \[
 n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix}:\mathbb{R}^{N}\rightarrow\mathbb{R}^{N}
 \]
@@ -490,29 +491,40 @@ matrix.
 %---------------------------------------------------------------------------------------------------%
 \subsection{Nearest Neighbor Search\label{subsec:Nearest-Neighbor-Search}}
 
-Let $\mathcal{I}_e$/$\mathcal{I}_k$ represent the sets of input conditions for the chemical 
-equilibrium/kinetics problems that have been fully solved (i.e., using the chemical equilibrium 
-function $\varphi$ or system of ODEs \eqref{eq:kinetics}):
+Let 
 %
 \begin{equation}
 \mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{\text{I}} 
-\qquad \mbox{or} \qquad 
-\mathcal{I}_k =\left\{ (n^j_k)\right\}_{j=1}^{\text{J}}.
+\qquad \mbox{and} \qquad 
+\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{\text{J}}.
 \end{equation}
 %
-Furthermore, let $d^{i}$ denote the Euclidean distance from $(T^{i},P^{i},b^{i})$, the input 
-condition of the $i$th fully solved problem, to $(T,P,b)$, the given input condition for the new 
-equilibrium/kinetics calculation:
+represent the sets of input conditions for the chemical equilibrium and kinetics problems that 
+have been fully solved (i.e., using the chemical equilibrium function $\varphi$ or system of ODEs 
+\eqref{eq:kinetics}).
+%
+%---------------------------------------------------------------------------------------------------%
+Furthermore, let 
 %
 \begin{equation}
-d^{i}=\left[\left(T-T^{i}\right)^{2} 
+d^{i}_e = \left[
+\left(T-T^{i}\right)^{2} 
 +\left(P-P^{i}\right)^{2}
-+\sum_{j=1}^{\text{E}}\left(b_{j}-b_{j}^{i}\right)^{2}\right]^{\frac{1}{2}} 
-\qquad i=1,\ldots,\mathrm{I}.
++\sum_{l=1}^{\text{E}}\left(b_{l}-b_{l}^{i}\right)^{2}\right]^{\frac{1}{2}} 
+\qquad i=1,\ldots,\mathrm{I} 
+\qquad \mbox{and} \qquad 
+d^{j}_k = \left[
+\sum_{m=1}^{\text{N_k}}\left((n^{\circ}_{k, m})^j - n^\circ_{k, m}\right)^{2}\right]^{\frac{1}{2}} 
 \end{equation}
+%
+denote the Euclidean distances either from $(T, P, b_e)^i$ to $(T,P,b)$ or from 
+$n^\circ_{k, j}$ to $n^\circ_{k}$. In $d^{i}_e$, the input condition of the $i$th fully 
+solved problem and the given input condition for the new equilibrium calculation are compared, 
+whereas $d^{j}_k$ measures the disctance between the initial condition of $j$th fully integrated 
+problem and the initial condition of new kinetic problem.
 
 %---------------------------------------------------------------------------------------------------%
-For the first-order Taylor expantion presented in (Eq.~\ref{eq:smart-estimate} or 
+For the first-order Taylor expansion presented in (Eq.~\ref{eq:smart-estimate} or 
 Eq.~\ref{eq:smart-estimate-kinetics}), a potentially suitable candidate for 
 $(T^{\star},P^{\star},b_e^{\star})$ or $(n^\circ_k)^\star$ is the \emph{nearest neighbor (NN)} of 
 $(T,P,b)$ or $n^\circ_k$ among all inputs in $\mathcal{I}_e$ or $\mathcal{I}_k$ (i.e., saved input 
@@ -535,6 +547,7 @@ for sufficiently small data-sets (e.g, with dozens to perhaps a few hundred entr
 search algorithms could be sub-optimal. Under these circumstances, a linear search algorithm, 
 conjugated with contiguous memory data structures, can be more efficient.
 
+%---------------------------------------------------------------------------------------------------%
 In the first version of the algorithm implementation, we have relied solely on a linear search
 algorithm, which worked well in the acceleration of the reactive transport problem (assuming all the 
 species are controlled by equilibrium) shown in Section~\ref{sec:Results}. Complementing
