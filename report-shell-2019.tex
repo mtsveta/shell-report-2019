@@ -333,7 +333,7 @@ speciation to equilibrium and the kinetic species with corresponding amounts
 $n_{e} \in \mathbb{R}^{N_e}$ and $n_{k} \in \mathbb{R}^{N_k} $ and bulk compositions 
 $b_{e}, b_{k} \in \mathbb{R}^{E}$. Then, the total amount of chemical species is presented as 
 \[
-n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix}:\mathbb{R}^{N}\rightarrow\mathbb{R}^{N}
+n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix} \in \mathbb{R}^{N}
 \]
 with the formula matrix $A=\begin{bmatrix}A_{e}\,A_{k}\end{bmatrix}$ composed of 
 matrices of the equilibrium and kinetic species $A_{e}$ and $A_{k}$, respectively. 
@@ -511,25 +511,24 @@ d^{i}_e = \left[
 \left(T-T^{i}\right)^{2} 
 +\left(P-P^{i}\right)^{2}
 +\sum_{l=1}^{\text{E}}\left(b_{l}-b_{l}^{i}\right)^{2}\right]^{\frac{1}{2}} 
-\qquad i=1,\ldots,\mathrm{I} 
 \qquad \mbox{and} \qquad 
-d^{j}_k = \left[
-\sum_{m=1}^{\text{N_k}}\left((n^{\circ}_{k, m})^j - n^\circ_{k, m}\right)^{2}\right]^{\frac{1}{2}} 
+d^{j}_k = \left[ \sum_{m=1}^{{\rm N_k}} 
+\left((n^\circ_{k, m})^{\,j} - n^\circ_{k, m}\right)^2 \right]^{\frac{1}{2}} 
 \end{equation}
 %
 denote the Euclidean distances either from $(T, P, b_e)^i$ to $(T,P,b)$ or from 
 $n^\circ_{k, j}$ to $n^\circ_{k}$. In $d^{i}_e$, the input condition of the $i$th fully 
 solved problem and the given input condition for the new equilibrium calculation are compared, 
-whereas $d^{j}_k$ measures the disctance between the initial condition of $j$th fully integrated 
+whereas $d^{j}_k$ measures the distance between the initial condition of $j$th fully integrated 
 problem and the initial condition of new kinetic problem.
 
 %---------------------------------------------------------------------------------------------------%
-For the first-order Taylor expansion presented in (Eq.~\ref{eq:smart-estimate} or 
-Eq.~\ref{eq:smart-estimate-kinetics}), a potentially suitable candidate for 
-$(T^{\star},P^{\star},b_e^{\star})$ or $(n^\circ_k)^\star$ is the \emph{nearest neighbor (NN)} of 
-$(T,P,b)$ or $n^\circ_k$ among all inputs in $\mathcal{I}_e$ or $\mathcal{I}_k$ (i.e., saved input 
-with the shortest Euclidean distance to $(T,P,b)$ or $n^\circ_k$). Note that other norms and 
-strategies can be used to define the most optimal reference element for the prediction.
+For the first-order Taylor expansion presented in Eq.~(\ref{eq:smart-estimate}) or 
+Eq.~(\ref{eq:smart-estimate-kinetics}), a potentially suitable candidate for $(T,P,b_e)^{\star}$ or 
+$(n^\circ_k)^\star$ is the \emph{nearest neighbor} (NN) of $(T,P,b)$ or $n^\circ_k$ among all inputs 
+in $\mathcal{I}_e$ or $\mathcal{I}_k$ (i.e., saved input with the shortest Euclidean distance to 
+$(T,P,b)$ or $n^\circ_k$). Note that other norms and strategies can be used to define the most 
+optimal reference element for the prediction.
 
 Plenty of algorithms have been reported in the literature to conduct a fast multi-dimensional NN 
 search. The use of \emph{kd-tree data structures} to store the inputs, for example, may permit us to
@@ -558,7 +557,7 @@ with kd-tree/locality-sensitive hashing search algorithms is ongoing work.
 
 \begin{figure}
 \begin{centering}
-\includegraphics{figures/equilibrium/algorithm-flowchart-for-equilibrium}
+\includegraphics{figures/method/algorithm-flowchart-for-equilibrium}
 \par\end{centering}
 \caption{\label{fig:algorithm-diagram}
 Diagram of the smart chemical equilibrium algorithm.}
@@ -566,7 +565,7 @@ Diagram of the smart chemical equilibrium algorithm.}
 
 \begin{figure}
 \begin{centering}
-\includegraphics{figures/equilibrium/algorithm-flowchart-for-equilibrium}
+\includegraphics{figures/method/algorithm-flowchart-for-kinetics}
 \par\end{centering}
 \caption{\label{fig:algorithm-diagram}
 Diagram of the smart chemical kinetics algorithm.}
@@ -635,12 +634,13 @@ using equilibrium constants of reactions.
 For kinetic species, we test the variation in the kinetic rates, i.e., 
 %
 \begin{equation}
-|d r_i|  \leq \epsilon_{{\rm  rel}} |\ln r_{i}^{\star}| + 
+|d r_i|  \leq \epsilon_{{\rm  rel}} | r_{i}^{\star}| + 
                    \epsilon_{{\rm  abs}} \qquad (i=1,\ldots,{\rm N_k}),
 \label{eq:acceptance-test-rates}
 \end{equation}
 %
-where $\delta r_i = \tfrac{d r^i}{d n_k} \delta n$.
+where $d r_i = \tfrac{\partial r_i}{\partial n} d n$ with 
+$d n=\begin{bmatrix}d n_{e}\\ d n_{k}\end{bmatrix} \in \mathbb{R}^{N}$.
 
 \subsection{Smart Chemical Equilibrium Algorithm \label{subsec:Smart-chemical-equilibrium}}
 
@@ -648,7 +648,7 @@ The smart chemical equilibrium algorithm proposed here is capable of
 remembering past chemical speciation calculations and includes sensitivity derivatives, using them to quickly and
 accurately estimate new equilibrium states. The flowchart in Figure~\ref{fig:algorithm-diagram}
 illustrates the main steps of the algorithm. At a very beginning, it solves
-the Gibbs energy minimization problem (Eq.~\ref{eq:gem-problem}), which is represented by the computationally expensive equilibrium function~$\varphi$ (Eq.~\ref{eq:equilibrium-func}).
+the Gibbs energy minimization problem Eq.~(\ref{eq:gem-problem}), which is represented by the computationally expensive equilibrium function~$\varphi$ Eq.~(\ref{eq:equilibrium-func}).
 Once this is done, the following information is saved for
 future fast and accurate predictions
 of equilibrium states, where the input conditions are relatively close
@@ -1615,8 +1615,17 @@ higher priority of the most used chemical states to be considered first. This wa
 element satisfies certain considered criterion, we can terminate the search process.  
 
 
+\begin{comment}
 Residual-based acceptance algorithm. 
 
+Reactive flows are all types of fluid flows with chemical reactions occouring within the fluid phase, at the interphase between different fluid phases or at interphases to solids. Gasphase combustion phenomena are the most important application of reactive flow modelling, while homogeneous combustion (gas-liquid or gas-solid) is still a minor research field. Simulation of reactive flows is getting more and more important, since they offer a possibility to gain insight to processes having harsh conditions, e.g. high temperture and pressure combustion. Additionally,  optimization of existing processes can be performed by modeling studies following design-of-experiment (DOE) approaches. In this way, the effort and costs for prototypes and field test can be reduced to a minimum.
+
+However, modelling reactive systems is numerically expensive since the non-linear reaction kinetics leads to stiff-ODE systems in the species and energy conservation equations. Special solution algorithms, capable of handling these stiff systems of equations, are required to solve the equations. The best known stiff ODE solvers are the SIBS and RADAU5 algorithm.
+
+Strategies to reduce the numerical effort to solve reactive flows include chemistry tabulation. Chemistry tabulation basically means that the solution of the given inital value problem (initial compostion, temperature, pressure) is stored. Subsequently, if similar starting values occur, the stored results are retrived and interpolated according to the differences in the starting values. These tabulation strategies differ depending on the employed combustion model. Some tabulation methods construct the tabulation on a predefined grid in the composition space, while others construt the tables "in-situ" during simulation run time.
+
+
+\end{comment}
 
 \section*{Acknowledgments}
 
