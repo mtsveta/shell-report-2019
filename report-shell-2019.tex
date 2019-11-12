@@ -287,8 +287,8 @@ simulation, using the smart chemical equilibrium / kinetics algorithms. It consi
 with results corresponding to three major stages of development of smart algorithm. The first tests
 of the algorithm were focused on studying its performance in RT model with all the species controlled
 by equilibrium and with Pitzer activity model used (see Subsection \ref{subsec:part-1}). Subsection
-\eqref{subsec:part-2} is dedicated to describe the performance of smart approach on the chemical system 
-with kinetically controlled species. Finally, Subsection \eqref{subsec:part-3} highlights results of 
+\ref{subsec:part-2} is dedicated to describe the performance of smart approach on the chemical system 
+with kinetically controlled species. Finally, Subsection \ref{subsec:part-3} highlights results of 
 RT simulations obtained after coupling Reaktoro to the Firedrake, an automated system for the solution 
 of partial differential equations using the finite element method (FEM) \cite{Rathgeber2016}. 
 \item [{Section~\ref{sec:Discussion-and-Conclusions}}] discusses implications and conclusions of 
@@ -313,10 +313,10 @@ and \emph{electrical charge} (Z), but can also be linear combinations of these, 
 
 A chemical system can exist at infinitely many \emph{chemical states}. A chemical state is defined 
 here as the quadruplet $(T, P, n, b)$, where $T$ is temperature, $P$ is pressure,  
-$n=(n_{1},\ldots,n_{\mathrm{N}})\in\mathbb{R}^{\text{N}}$ is the vector of species amounts 
+$n=(n_{1},\ldots,n_{\mathrm{N}})\in\mathbb{R}^{{\rm N}}$ is the vector of species amounts 
 (speciation), with $n_{i}$ denoting the amount of the $i$th species (in moles) and N the number of 
-species, and $b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{\text{E}}$ is the vector of element 
-amounts with $b_{j}$ being the amount of the $j$th element (in moles) and $\text{E}$ the number of 
+species, and $b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{{\rm E}}$ is the vector of element 
+amounts with $b_{j}$ being the amount of the $j$th element (in moles) and ${\rm E}$ the number of 
 elements. In general, $b$ is related to $n$ via the following mass conservation equation:
 %
 \begin{equation}
@@ -361,14 +361,14 @@ n_{e} & \geq0
 \label{eq:gem-problem}
 \]
 %
-The \emph{chemical potential} of the $i$th species $\mu_{e, i}=\mu_{e, i}(T,P,n)$ is defined as:
+The \emph{chemical potential} of the $i$th species $\mu_{e, i}=\mu_{e, i}(T,P,n_e)$ is defined as:
 %
 \begin{equation}
 \mu_{e, i}=\mu_{e, i}^{\circ}+RT\ln a_{e, i},
 \end{equation}
 %
 with $R$ denoting the universal gas constant, $\mu_{e, i}^{\circ}=\mu_{e, i}^{\circ}(T,P)$ the 
-\emph{standard chemical potential} of the $i$th species, and $a_{e, i}=a_{e, i}(T,P,n)$ the 
+\emph{standard chemical potential} of the $i$th species, and $a_{e, i}=a_{e, i}(T,P,n_e)$ the 
 \emph{activity} of the $i$th species. Methods for solving chemical equilibrium problem using either 
 Gibbs energy minimization (GEM) or law of mass action (LMA) methods are addressed in 
 Appendix~\ref{subsec:Chemical-equilibrium-equations} or with more detail in 
@@ -494,9 +494,9 @@ matrix.
 Let 
 %
 \begin{equation}
-\mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{\text{I}} 
+\mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{{\rm I}} 
 \qquad \mbox{and} \qquad 
-\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{\text{J}}.
+\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{{\rm J}}.
 \end{equation}
 %
 represent the sets of input conditions for the chemical equilibrium and kinetics problems that 
@@ -510,14 +510,14 @@ Furthermore, let
 d^{i}_e = \left[
 \left(T-T^{i}\right)^{2} 
 +\left(P-P^{i}\right)^{2}
-+\sum_{l=1}^{\text{E}}\left(b_{l}-b_{l}^{i}\right)^{2}\right]^{\frac{1}{2}} 
++\sum_{l=1}^{{\rm E}}\left(b_{l}-b_{l}^{i}\right)^{2}\right]^{\frac{1}{2}} 
 \qquad \mbox{and} \qquad 
 d^{j}_k = \left[ \sum_{m=1}^{{\rm N_k}} 
 \left((n^\circ_{k, m})^{\,j} - n^\circ_{k, m}\right)^2 \right]^{\frac{1}{2}} 
 \end{equation}
 %
 denote the Euclidean distances either from $(T, P, b_e)^i$ to $(T,P,b)$ or from 
-$n^\circ_{k, j}$ to $n^\circ_{k}$. In $d^{i}_e$, the input condition of the $i$th fully 
+$(n^\circ_{k})^{\,j}$ to $n^\circ_{k}$. In $d^{i}_e$, the input condition of the $i$th fully 
 solved problem and the given input condition for the new equilibrium calculation are compared, 
 whereas $d^{j}_k$ measures the distance between the initial condition of $j$th fully integrated 
 problem and the initial condition of new kinetic problem.
@@ -555,11 +555,109 @@ with kd-tree/locality-sensitive hashing search algorithms is ongoing work.
 
 \subsection{Acceptance Test}
 
+%---------------------------------------------------------------------------------------------------%
+Once a predicted chemical equilibrium state is calculated, it must be tested for acceptance. Due 
+to the usage of the first-order Taylor approximation, we need to ensure that the new estimated 
+chemical state is not ``too far'' from the previous fully calculated one, used as a reference point. 
+This could be done naively by checking how much the species amounts have changed from one state to 
+another, using the following test condition for all species:
+%
+\begin{equation}
+|\bar{n}_{i}-n_{i}^{\star}| \leq \epsilon_{\rm rel} |n_{i}^{\star}| + \epsilon_{{\rm abs}} 
+\qquad(i=1,\ldots,{\rm N}_e).
+\label{eq:eq:acceptance-test-n}
+\end{equation}
+%
+Eq.~(\ref{eq:eq:acceptance-test-n}) controls how much absolute and relative changes in the new
+estimated species amounts, $\bar{n}_{i}$, can be tolerated for given absolute and relative tolerance 
+parameters $\epsilon_{{\rm abs}}$ and $\epsilon_{{\rm rel}}$, respectively.
+
+%---------------------------------------------------------------------------------------------------%
+The major drawback of the tolerance test in Eq.~(\ref{eq:eq:acceptance-test-n}) is that it does not 
+reflect the thermodynamic \emph{behavior of stable species and phases}. Consider, for instance, a 
+chemical system with two stable phases: an aqueous solution saturated with respect to a pure mineral 
+phase. Adding more of that mineral composition to the system will not alter the composition of the
+fluid, but just increase the current solid phase amount. Under such conditions, the acceptance test, 
+based on species amounts, would fail even though the estimated chemical equilibrium state, using 
+first-order sensitivity derivatives, would be exact. This happens, because  the amount of the mineral 
+increases linearly, while the amount of each aqueous species remains constant.
+
+%---------------------------------------------------------------------------------------------------%
+However, in the example above, assuming that the perturbation of the system is introduced only by 
+adding the mineral phase stoichiometry to the $b_e$ vector, without changing the temperature and 
+pressure, there is one thermodynamic quantity that would remain constant: $\mu_{i}$, the chemical 
+potential of the mineral species. This behavior inspired us to use chemical potentials during the 
+acceptance test:
+%
+\begin{equation}
+|\bar{\mu}_{e, i}-\mu_{e, i}^{\star}| 
+\leq \epsilon_{{\rm rel}}|\mu_{e, i}^{\star}|+\epsilon_{{\rm abs}}
+\qquad(i=1,\ldots,{\rm N}_e),
+\label{eq:acceptance-test-mu}
+\end{equation}
+%
+where $\bar{\mu}_{e, i}$ is the estimated chemical potential of the
+$i$th species at the new chemical equilibrium state: 
+\begin{equation}
+\bar{\mu}_e = \mu^{\star}_e 
++ \frac{\partial\mu_e}{\partial T}^{\star}(T-T^{\star}) 
++ \frac{\partial\mu_e}{\partial P}^{\star}(P-P^{\star})
++ \frac{\partial\mu_e}{\partial n_e}^{\star}(n_e-n^{\star}_e),
+\label{eq:mu-estimated}
+\end{equation}
+%
+where $(\partial\mu_e/\partial T)^{\star}\in\mathbb{R}^{{\rm N}_e}$,
+$(\partial\mu_e/\partial P)^{\star}\in\mathbb{R}^{{\rm N}_e}$, and 
+$(\partial\mu_e/\partial n_e)^{\star}\in\mathbb{R}^{{\rm N_e\ensuremath{\times}N}_e}$
+are chemical potential sensitivities evaluated at the equilibrium
+state with input conditions $(T,P,b_e)^{\star}$. 
+
+%---------------------------------------------------------------------------------------------------%
+\textbf{Remark:} For the law of mass-action (LMA) methods, in which no access to standard chemical 
+potentials exists in some cases (for example when the thermodynamic database used only contains 
+equilibrium constants of reactions), a similar but \emph{not equivalent}, test exploits logarithm 
+of activities:
+%
+\begin{equation}
+|\ln\bar{a}_{i}-\ln a_{i}^{\star}| 
+\leq \epsilon_{{\rm rel}} |\ln a_{i}^{\star}| + \epsilon_{{\rm abs}} 
+\qquad(i=1,\ldots,{\rm N}_e).
+\label{eq:acceptance-test-lna}
+\end{equation}
+%
+%---------------------------------------------------------------------------------------------------%
+Note, however, that activities are in general less sensitive to temperature variations than standard 
+chemical potentials, so that the above alternative acceptance test would be less complete than  
+Eq.~(\ref{eq:acceptance-test-mu}) and more indifferent towards temperature changes. To fix this, 
+one could use the approach detailed in \citet{Leal2016b} that permits apparent standard chemical 
+potentials of the species to be calculated using equilibrium constants of reactions.
+
+%---------------------------------------------------------------------------------------------------%
+To predicted amounts of the kinetic species, we control the variation in the kinetic rates, i.e., 
+%
+\begin{equation}
+|\bar{r}_i - r^{\star}_i | 
+\leq \epsilon_{{\rm rel}} | r_{i}^{\star}| + \epsilon_{{\rm abs}} 
+\qquad (i=1,\ldots,{\rm N_k}),
+\label{eq:acceptance-test-rates}
+\end{equation}
+%
+where $\bar{r}_i - r^{\star}_i = {\tfrac{\partial r_i}{\partial n}}^\star (n - n^\star)
+= {\tfrac{\partial r_i}{\partial n}}^\star
+\begin{bmatrix} 
+n_{e} - n^\star_e \\ 
+n_{k} - n^\star_k 
+\end{bmatrix}$.
+
+
+%---------------------------------------------------------------------------------------------------%
+\subsection{Smart Chemical Equilibrium / Kinetics Algorithm \label{subsec:Smart-chemical-algorithm}}
+
 \begin{figure}
 \begin{centering}
 \includegraphics{figures/method/algorithm-flowchart-for-equilibrium}
 \par\end{centering}
-\caption{\label{fig:algorithm-diagram}
+\caption{\label{fig:algorithm-diagram-equilibrium}
 Diagram of the smart chemical equilibrium algorithm.}
 \end{figure}
 
@@ -567,118 +665,74 @@ Diagram of the smart chemical equilibrium algorithm.}
 \begin{centering}
 \includegraphics{figures/method/algorithm-flowchart-for-kinetics}
 \par\end{centering}
-\caption{\label{fig:algorithm-diagram}
+\caption{\label{fig:algorithm-diagram-kinetics}
 Diagram of the smart chemical kinetics algorithm.}
 \end{figure}
 
-Once a predicted chemical equilibrium state is calculated, it must
-be tested for acceptance. Due to the usage of the first-order Taylor
-approximation, we need to ensure that the new estimated chemical 
-state is not ``too far'' from the previous fully calculated state, used as a reference point. This could be done naively by checking
-how much the species amounts have changed from one state to another, using
-the following test condition for all species:
-\begin{equation}
-|\bar{n}_{i}-n_{i}^{\star}|\leq\epsilon_{\text{rel}}|n_{i}^{\star}|+\epsilon_{\text{abs}}\qquad(i=1,\ldots,\text{N}).\label{eq:eq:acceptance-test-n}
-\end{equation}
-Eq.~(\ref{eq:eq:acceptance-test-n}) controls how much absolute and relative 
-changes in the new
-estimated species amounts, $\bar{n}_{i}$, can be tolerated for given
-absolute and relative tolerance parameters $\epsilon_{\text{abs}}$
-and $\epsilon_{\text{rel}}$, respectively.
-
-The major drawback of the tolerance test in Eq.~(\ref{eq:eq:acceptance-test-n})
-is that it does not reflect the thermodynamic \emph{behavior of stable species and
-phases}. Consider, for instance, a chemical system with two stable
-phases: an aqueous solution saturated with respect to a pure mineral phase. Adding more
-of that mineral composition to the system will not alter the composition of the
-fluid, but just increase the current solid phase amount. Under such conditions,
-the acceptance test, based on species amounts, would fail even though
-the estimated chemical equilibrium state, using first-order sensitivity
-derivatives, would be exact. This happens, because  the
-amount of the mineral increases linearly, while the amount of each aqueous species remains
-constant.
-
-However, in the example above, assuming that the perturbation of the system is
-introduced only by adding the mineral phase stoichiometry to the b vector, without changing the temperature
-and pressure, there is one thermodynamic quantity that would remain
-constant: $\mu_{i}$, the chemical potential of the mineral species.
-This behavior inspired us to use chemical potentials during the acceptance
-test: 
-\begin{equation}
-|\bar{\mu}_{i}-\mu_{i}^{\star}|\leq\epsilon_{\text{rel}}|\mu_{i}^{\star}|+\epsilon_{\text{abs}}\qquad(i=1,\ldots,\text{N}),\label{eq:acceptance-test-mu}
-\end{equation}
-where $\bar{\mu}_{i}$ is the estimated chemical potential of the
-$i$th species at the new chemical equilibrium state: 
-\begin{equation}
-\bar{\mu}=\mu^{\star}+\frac{\partial\mu}{\partial T}^{\star}(T-T^{\star})+\frac{\partial\mu}{\partial P}^{\star}(P-P^{\star})+\frac{\partial\mu}{\partial n}^{\star}(n-n^{\star}),\label{eq:mu-estimated}
-\end{equation}
-where $(\partial\mu/\partial T)^{\star}\in\mathbb{R}^{\text{N}}$,
-$(\partial\mu/\partial P)^{\star}\in\mathbb{R}^{\text{N}}$, and $(\partial\mu/\partial n)^{\star}\in\mathbb{R}^{\text{N\ensuremath{\times}N}}$
-are chemical potential sensitivities evaluated at the equilibrium
-state with input conditions $(T^{\star},P^{\star},b^{\star})$. 
-
-\textbf{Remark:} For the law of mass-action (LMA) methods, in which
-no access to standard chemical potentials exists in some cases (for example when the thermodynamic database used only contains equilibrium constants
-of reactions), a similar, but \emph{not equivalent}, test exploits logarithm of 
-activities:
-\begin{equation}
-|\ln\bar{a}_{i}-\ln a_{i}^{\star}|\leq\epsilon_{\text{rel}}|\ln a_{i}^{\star}|+\epsilon_{\text{abs}}\qquad(i=1,\ldots,\text{N}).\label{eq:acceptance-test-lna}
-\end{equation}
-Note, however, that activities are in general less sensitive to temperature
-variations than standard chemical potentials, so that the above alternative
-acceptance test would be less complete than Eq.~(\ref{eq:acceptance-test-mu})
-and more indifferent towards temperature changes. To fix this, one could use the approach detailed in \citet{Leal2016b} that permits
-apparent standard chemical potentials of the species to be calculated
-using equilibrium constants of reactions.
-
-For kinetic species, we test the variation in the kinetic rates, i.e., 
+%---------------------------------------------------------------------------------------------------%
+The smart chemical equilibrium / kinetics algorithm proposed here is capable of remembering past 
+chemical speciation calculations with corresponding sensitivity derivatives, using them to quickly 
+and accurately estimate new equilibrium / kinetics states. 
 %
-\begin{equation}
-|d r_i|  \leq \epsilon_{{\rm  rel}} | r_{i}^{\star}| + 
-                   \epsilon_{{\rm  abs}} \qquad (i=1,\ldots,{\rm N_k}),
-\label{eq:acceptance-test-rates}
-\end{equation}
+The flowchart in Figure~\ref{fig:algorithm-diagram-equilibrium} illustrates the main steps of the 
+algorithm focused on equilibrium species. At a very beginning, it solves the GEM problem 
+Eq.~(\ref{eq:gem-problem}), which is represented by the computationally expensive equilibrium 
+function~$\varphi$ Eq.~(\ref{eq:equilibrium-func}). Once this is done, the following information is 
+saved for future fast and accurate predictions of equilibrium states, where the input conditions are 
+relatively close to the one just recorded (i.e., learned):
 %
-where $d r_i = \tfrac{\partial r_i}{\partial n} d n$ with 
-$d n=\begin{bmatrix}d n_{e}\\ d n_{k}\end{bmatrix} \in \mathbb{R}^{N}$.
-
-\subsection{Smart Chemical Equilibrium Algorithm \label{subsec:Smart-chemical-equilibrium}}
-
-The smart chemical equilibrium algorithm proposed here is capable of
-remembering past chemical speciation calculations and includes sensitivity derivatives, using them to quickly and
-accurately estimate new equilibrium states. The flowchart in Figure~\ref{fig:algorithm-diagram}
-illustrates the main steps of the algorithm. At a very beginning, it solves
-the Gibbs energy minimization problem Eq.~(\ref{eq:gem-problem}), which is represented by the computationally expensive equilibrium function~$\varphi$ Eq.~(\ref{eq:equilibrium-func}).
-Once this is done, the following information is saved for
-future fast and accurate predictions
-of equilibrium states, where the input conditions are relatively close
-to the one just recorded (i.e., learned):
 \begin{itemize}
-\item input conditions $(T, P, b)$;
+\item input conditions $(T, P, b_e)$;
 \item corresponding calculated equilibrium amounts of species $n$;
-\item sensitivity derivatives of the calculated equilibrium state: $\partial\varphi/\partial T$,
-$\partial\varphi/\partial P$, and $\partial\varphi/\partial b$;
-\item derivatives of the chemical potentials $\partial\mu/\partial T$,
-$\partial\mu/\partial P$, and $\partial\mu/\partial n$.
+\item sensitivity derivatives of the calculated equilibrium state: 
+$\partial\varphi/\partial T$, $\partial\varphi/\partial P$, and $\partial\varphi/\partial b_e$;
+\item derivatives of the chemical potentials 
+$\partial\mu/\partial T$, $\partial\mu/\partial P$, and $\partial\mu/\partial n_e$.
 \end{itemize}
+%
 See \citet{Leal2017} for a description of how to accurately calculate
 these sensitivity and thermodynamic property derivatives.
 
-Next time, when the algorithm is asked to solve a new equilibrium problem,
-it first does so by searching for the closest $(T^{\star},P^{\star},b^{\star})$
-to the given $(T,P,b)$ among all saved equilibrium input conditions
-in $\mathcal{I}$. Once the search is concluded, the previously calculated
-potentially suitable equilibrium state is used to estimate the new
-equilibrium state using equation~(\ref{eq:smart-estimate}).
+%---------------------------------------------------------------------------------------------------%
+Next time, when the algorithm is asked to solve a new equilibrium problem, it first does so by 
+searching for the closest $(T,P,b_e)^{\star}$ to the given $(T,P,b_e)$ among all saved equilibrium 
+input conditions in $\mathcal{I}_e$. Once the search is concluded, the previously calculated
+potentially suitable equilibrium state is used to estimate the new equilibrium state using 
+equation~(\ref{eq:smart-estimate}).
+%---------------------------------------------------------------------------------------------------%
+Finally, it remains to check if the estimated equilibrium state is accurate enough, using the 
+acceptance test defined by Eq.~(\ref{eq:acceptance-test-mu}). If the test succeeds, then the 
+speciation calculation ends. Otherwise, a complete chemical equilibrium calculation at $(T,P,b)$ is 
+performed using GEM algorithm $n_e=\varphi(T,P,b_e)$. It is followed by similar derivative evaluation 
+operations, as presented above, when the smart equilibrium algorithm was invoked for the first time.
 
-Finally, it remains to check if the estimated equilibrium state is
-accurate enough, using the acceptance test defined by Eq.~(\ref{eq:acceptance-test-mu}).
-If the test succeeds, then the speciation calculation ends. Otherwise,
-a complete chemical equilibrium calculation at $(T,P,b)$ is performed
-using the Gibbs energy minimization algorithm $n=\varphi(T,P,b)$. It is followed by similar derivative evaluation
-operations, as presented above, when the smart equilibrium algorithm
-was invoked for the first time.
+%---------------------------------------------------------------------------------------------------%
+The smart algorithm for kinetically controlled reactions is presented with the flowchart in Figure~\ref{fig:algorithm-diagram-kinetics}. It begins with integrating the system of ODEs 
+Eq.~(\ref{eq:kinetics}) for reconstruction of kinetic species. After that or simultaneously, 
+the sensitivity derivatives $\tfrac{n_k}{n^\circ_k}$ are calculated. Once this information is 
+collected, it is saved for future fast and accurate predictions of kinetic states, where the input 
+conditions are relatively close to the one just stored (i.e., learned):
+%
+\begin{itemize}
+\item input conditions $n^\circ_k$;
+\item corresponding calculated kinetics amounts of species $n_k$;
+\item sensitivity derivatives of the calculated kinetic state $\tfrac{n_k}{n^\circ_k}$;
+\item properties of the corresponding chemical state, such as chemical rates $r$ and the composition 
+of equilibrium species $n_e$.
+\end{itemize}
+%---------------------------------------------------------------------------------------------------%
+Next time, when the algorithm needs to solve a new kinetic path, it first retrieves the closest 
+$(n^\circ_k)^\star$ to the given $n^\circ_k$ among all saved kinetic initial conditions in 
+$\mathcal{I}_k$. Next, the previously calculated potentially suitable kinetic state $n_k$ is used as 
+a reference to estimate the new kinetic state using equation~(\ref{eq:smart-estimate-kinetics}).
+At the end, it remains to control whether the estimated kinetic state $\bar{n}_k$$ satisfies the 
+variational acceptance criterion defined by Eq.~(\ref{eq:acceptance-test-rates}). If this inequality 
+is satisfied, then the calculation ends. Otherwise, a complete numerical integration with initial 
+state $n^\circ_k$ is performed using the system Eq. \ref{eq:kinetics}. It is followed by the
+evaluation of sensitivities, as discussed above, when the smart equilibrium algorithm was invoked 
+for the first time.
 
+%---------------------------------------------------------------------------------------------------%
 \section{Results\label{sec:Results}}
 
 We present here an example of using the smart chemical equilibrium algorithm in
@@ -692,7 +746,7 @@ details on how we solve the reactive transport equations, see Appendix~\ref{sec:
 The reactive transport modeling example carried out
 in this work is illustrated in Figure~\ref{fig:illustration-reactive-transport-model}.
 Here, the initial mineral composition of the horizontal porous
-rock column consists of 98\%$_{\text{vol}}$ SiO$_{2}$(quartz) and 2\%$_{\text{vol}}$
+rock column consists of 98\%$_{{\rm vol}}$ SiO$_{2}$(quartz) and 2\%$_{{\rm vol}}$
 CaCO$_{3}$(calcite), with an initial porosity of 10\% ($\phi = 0.1$). The resident
 fluid is a 0.70~molal~NaCl brine in equilibrium with the rock minerals
 (our calculated equilibrium state indicates a pH of about 9.2). The
@@ -770,17 +824,17 @@ accelerating chemical kinetics calculations is an on-going project by the author
 \par\end{centering}
 \caption{\label{fig:calcite-dolomite}
 %
-The volume percent ($\%_{\text{vol}}$)
+The volume percent ($\%_{{\rm vol}}$)
 of the minerals calcite and dolomite along the horizontal rock core as well as the
 concentrations of selected aqueous species (molal) at three different
 times: 30~minutes, 5~hours, and 50~days (after 1, 10, and 2400~time
 steps of 30~minutes each, respectively). The \emph{solid lines} correspond
 to the results of the reactive transport simulation provided by conventional
 chemical equilibrium calculations based on full Gibbs energy minimization calculations performed in every cell of each time step.
-The circles $\text{(}\bullet\text{)}$ and $\text{(}\circ\text{)}$
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
 correspond to the values generated by the smart chemical equilibrium calculations.
-\emph{Solid circles} $\text{(}\bullet\text{)}$ indicate those cells, where successful
-fast and accurate smart equilibrium predictions were preformed successfully. The \emph{empty circles} $\text{(}\circ\text{)}$ depict the cells,
+\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate those cells, where successful
+fast and accurate smart equilibrium predictions were preformed successfully. The \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells,
 where full Gibbs energy minimization calculations were required and where, thus, \emph{on-demand learning} occurred.}
 \end{figure}
 
@@ -814,13 +868,13 @@ concentration locally jumps as calcite dissolves.
 
 We observe in Figure~\ref{fig:calcite-dolomite} that the use of the
 smart chemical equilibrium algorithm \emph{does not} compromise accuracy
-during the simulation. In this figure, the solid circles $\text{(}\bullet\text{)}$
+during the simulation. In this figure, the solid circles ${\rm (}\bullet{\rm )}$
 represent a successful smart prediction of an accurate equilibrium
 state at that cell position and time step, whereas the empty circles
-$\text{(}\circ\text{)}$ represent a failure in this respect. The
+${\rm (}\circ{\rm )}$ represent a failure in this respect. The
 latter happens because of the absence of a previously solved chemical
 equilibrium problem similar enough to the new one. The empty circles
-$\text{(}\circ\text{)}$ also denote cells at which an on-demand learning
+${\rm (}\circ{\rm )}$ also denote cells at which an on-demand learning
 operation was triggered, resulting in a Gibbs energy minimization
 calculation (that would be done anyway if the smart equilibrium
 algorithm was not used). These on-demand learning operations are triggered
@@ -866,8 +920,8 @@ of this, during the first time step, the algorithm requires \emph{on-demand
 learning} in 6 cells next to the left boundary (see the empty circles
 $\circ$ in Figure~\ref{fig:calcite-dolomite}). As the perturbation
 fronts move down the rock core, additional learning is performed as
-needed to fulfil a given accuracy criterion; here $\epsilon_{\text{rel}}=0.1$
-and $\epsilon_{\text{abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
+needed to fulfil a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$
+and $\epsilon_{{\rm abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
 As seen in Figure~\ref{fig:calcite-dolomite} (after 5h, or 10~time
 steps), 2~cells required a full and expensive chemical equilibrium
 calculation to both ensure accuracy and enable on-demand learning.
@@ -1012,8 +1066,7 @@ stabilizes at a value close to 200, whereas the ideal speedup is about
 400. Thus, further research and improvements in this regard are needed
 further acceleration of the algorithm. 
 
-\subsection{Chemical Kinetics}
-
+\subsection{HKF activity model. Example with chemical kinetics.  \label{subsec:part-2}}
 {\color{blue}{UPDATE:
 
 To study acceleration of the chemical kinetics, we consider Calcite as kinetics 
@@ -1044,18 +1097,18 @@ species. SA = 5000.
 \par\end{center}%
 \end{minipage}
 \par\end{centering}
-\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{\text{vol}}$)
+\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{{\rm vol}}$)
 of minerals calcite and dolomite along the rock core as well as the
 concentrations of selected aqueous species (in molal) at three different
 times: 30 minutes, 5 hours, and 50 days (after 1, 10, and 2400 time
 steps of 30 minutes each, respectively). The \emph{solid curves} correspond
 to results of the reactive transport simulation using conventional
 chemical equilibrium calculations based on the Gibbs energy minimization.
-The circles $\text{(}\bullet\text{)}$ and $\text{(}\circ\text{)}$
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
 correspond to the results using smart chemical equilibrium calculations.
-\emph{Solid circles} $\text{(}\bullet\text{)}$ indicate successful
+\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
 fast and accurate smart equilibrium prediction at that point, whereas
-the \emph{empty circles} $\text{(}\circ\text{)}$ depict the cells
+the \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells
 where \emph{on-demand learning} was needed.}
 \end{figure}
 
@@ -1090,13 +1143,13 @@ concentration locally jumps as calcite dissolves.
 
 Observe in Figure~\ref{fig:calcite-dolomite-kinetics} that the use of the
 smart chemical equilibrium algorithm \emph{does not} compromise accuracy
-during the simulation. In this figure, the solid circles $\text{(}\bullet\text{)}$
+during the simulation. In this figure, the solid circles ${\rm (}\bullet{\rm )}$
 represent a successful smart prediction of an accurate equilibrium
 state at that cell position and time step, whereas the empty circles
-$\text{(}\circ\text{)}$ represent a failure in this respect. The
+${\rm (}\circ{\rm )}$ represent a failure in this respect. The
 latter happens because of the absence of a previously solved chemical
 equilibrium problem similar enough to the new one. The empty circles
-$\text{(}\circ\text{)}$ also denote cells at which an on-demand learning
+${\rm (}\circ{\rm )}$ also denote cells at which an on-demand learning
 operation was triggered, resulting in a Gibbs energy minimization
 calculation (that would be needed anyway if the smart equilibrium
 algorithm was not used). These on-demand learning operations are triggered
@@ -1118,8 +1171,8 @@ of this, during the first time step, the algorithm requires \emph{on-demand
 learning} in 6 cells next to the left boundary (see the empty circles
 $\circ$ in Figure~\ref{fig:calcite-dolomite-kinetics}). As the perturbation
 fronts move down the rock core, additional learning is performed as
-needed to fulfil a given accuracy criterion; here $\epsilon_{\text{rel}}=0.1$
-and $\epsilon_{\text{abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
+needed to fulfil a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$
+and $\epsilon_{{\rm abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
 As seen in Figure~\ref{fig:calcite-dolomite-kinetics} (after 5h, or 10 time
 steps), 2 cells require a full and expensive chemical equilibrium
 calculation for both accuracy and on-demand learning purposes.
@@ -1300,18 +1353,18 @@ species. Specific surface area = 50.
 \par\end{center}%
 \end{minipage}
 \par\end{centering}
-\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{\text{vol}}$)
+\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{{\rm vol}}$)
 of minerals calcite and dolomite along the rock core as well as the
 concentrations of selected aqueous species (in molal) at three different
 times: 30 minutes, 5 hours, and 50 days (after 1, 10, and 2400 time
 steps of 30 minutes each, respectively). The \emph{solid curves} correspond
 to results of the reactive transport simulation using conventional
 chemical equilibrium calculations based on the Gibbs energy minimization.
-The circles $\text{(}\bullet\text{)}$ and $\text{(}\circ\text{)}$
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
 correspond to the results using smart chemical equilibrium calculations.
-\emph{Solid circles} $\text{(}\bullet\text{)}$ indicate successful
+\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
 fast and accurate smart equilibrium prediction at that point, whereas
-the \emph{empty circles} $\text{(}\circ\text{)}$ depict the cells
+the \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells
 where \emph{on-demand learning} was needed.}
 \end{figure}
 
@@ -1346,13 +1399,13 @@ concentration locally jumps as calcite dissolves.
 
 Observe in Figure~\ref{fig:calcite-dolomite-kinetics} that the use of the
 smart chemical equilibrium algorithm \emph{does not} compromise accuracy
-during the simulation. In this figure, the solid circles $\text{(}\bullet\text{)}$
+during the simulation. In this figure, the solid circles ${\rm (}\bullet{\rm )}$
 represent a successful smart prediction of an accurate equilibrium
 state at that cell position and time step, whereas the empty circles
-$\text{(}\circ\text{)}$ represent a failure in this respect. The
+${\rm (}\circ{\rm )}$ represent a failure in this respect. The
 latter happens because of the absence of a previously solved chemical
 equilibrium problem similar enough to the new one. The empty circles
-$\text{(}\circ\text{)}$ also denote cells at which an on-demand learning
+${\rm (}\circ{\rm )}$ also denote cells at which an on-demand learning
 operation was triggered, resulting in a Gibbs energy minimization
 calculation (that would be needed anyway if the smart equilibrium
 algorithm was not used). These on-demand learning operations are triggered
@@ -1374,8 +1427,8 @@ of this, during the first time step, the algorithm requires \emph{on-demand
 learning} in 6 cells next to the left boundary (see the empty circles
 $\circ$ in Figure~\ref{fig:calcite-dolomite-kinetics}). As the perturbation
 fronts move down the rock core, additional learning is performed as
-needed to fulfil a given accuracy criterion; here $\epsilon_{\text{rel}}=0.1$
-and $\epsilon_{\text{abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
+needed to fulfil a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$
+and $\epsilon_{{\rm abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
 As seen in Figure~\ref{fig:calcite-dolomite-kinetics} (after 5h, or 10 time
 steps), 2 cells require a full and expensive chemical equilibrium
 calculation for both accuracy and on-demand learning purposes.
@@ -1386,6 +1439,7 @@ calculation for both accuracy and on-demand learning purposes.
 \includegraphics[width=0.5\textwidth]{figures/kinetics-sa-50/on-demand-learning-countings}
 \par\end{centering}
 \caption{\label{fig:number-training-kinetics}
+%
 The accumulated number of \emph{on-demand
 learning} operations triggered by the smart chemical equilibrium algorithm
 during the reactive transport simulation using a mesh with 100 cells.
@@ -1524,6 +1578,72 @@ stabilizes at a value close to 200, whereas the ideal speedup is about
 for even higher efficiency. 
 }
 }
+
+\subsection{Coupling of Reaktoro with Firedrake on two-dimensional reactive transport problem  \label{subsec:part-3}}
+
+ROCK
+
+Firedrake for solving the partial differential equations (advection, diffusion, Darcy equation, etc.)
+
+
+\begin{figure}
+\begin{centering}
+\includegraphics[width=0.7\textwidth]{figures/rock/minerals.png}
+\par\end{centering}
+\caption{\label{fig:rock-minerals}
+Mineral composition of the porous rock changing as an acidic aqueous fluid is injected on the left boundary.}
+\end{figure}
+
+\begin{figure}
+\begin{centering}
+\includegraphics[width=0.7\textwidth]{figures/rock/porosity.png}
+\par\end{centering}
+\caption{\label{fig:rock-porosity}
+Porosity changes as rock minerals react with the acidic aqueous fluid injected on the left boundary.}
+\end{figure}
+
+
+\begin{figure}
+\begin{centering}
+\begin{minipage}[t]{0.5\columnwidth}%
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-10}
+\par\end{center}
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-1000}
+\par\end{center}
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-2400}
+\par\end{center}%
+\end{minipage}%
+\begin{minipage}[t]{0.5\columnwidth}%
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-10}
+\par\end{center}
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-1000}
+\par\end{center}
+\begin{center}
+\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-2400}
+\par\end{center}%
+\end{minipage}
+\par\end{centering}
+\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{{\rm vol}}$)
+of minerals calcite and dolomite along the rock core as well as the
+concentrations of selected aqueous species (in molal) at three different
+times: 30 minutes, 5 hours, and 50 days (after 1, 10, and 2400 time
+steps of 30 minutes each, respectively). The \emph{solid curves} correspond
+to results of the reactive transport simulation using conventional
+chemical equilibrium calculations based on the Gibbs energy minimization.
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
+correspond to the results using smart chemical equilibrium calculations.
+\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
+fast and accurate smart equilibrium prediction at that point, whereas
+the \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells
+where \emph{on-demand learning} was needed.}
+\end{figure}
+
+
 
 \section{Discussion and Conclusions\label{sec:Discussion-and-Conclusions}}
 
@@ -1870,13 +1990,13 @@ minimum of the Gibbs energy function $G$ \citep{Nocedal1999,Fletcher2000}:
 \begin{alignat}{2}
 \mu-A^{T}y-z & =0,\\
 An-b & =0,\\
-n_{i}z_{i} & =0 & \qquad & (i=1,\ldots,\text{N}),\\
-n_{i} & \geq0 &  & (i=1,\ldots,\text{N}),\\
-z_{i} & \geq0 &  & (i=1,\ldots,\text{N}),
+n_{i}z_{i} & =0 & \qquad & (i=1,\ldots,{\rm N}),\\
+n_{i} & \geq0 &  & (i=1,\ldots,{\rm N}),\\
+z_{i} & \geq0 &  & (i=1,\ldots,{\rm N}),
 \end{alignat}
-where $y\in\mathbb{R}^{\text{E}}$ and $z\in\mathbb{R}^{\text{N}}$
+where $y\in\mathbb{R}^{{\rm E}}$ and $z\in\mathbb{R}^{{\rm N}}$
 are introduced \emph{Lagrange multipliers} that need to be solved
-along with the specie's amounts ${n\in\mathbb{R}^{\text{N}}}$. For
+along with the specie's amounts ${n\in\mathbb{R}^{{\rm N}}}$. For
 more details about these Lagrange multipliers and their interpretation
 as well as for instructions on how to efficiently solve these equations,
 see \citet{Leal2016a,Leal2017}.
@@ -1886,29 +2006,29 @@ law of mass action} (xLMA) formulation as
 \begin{alignat}{2}
 \ln K-\nu(\ln a+\ln w) & =0,\\
 An-b & =0,\\
-n_{i}\ln w_{i} & =0 & \qquad & (i=1,\ldots,\text{N}),\\
-n_{i} & \geq0 &  & (i=1,\ldots,\text{N}),\\
-0<w_{i} & \leq1 &  & (i=1,\ldots,\text{N}),
+n_{i}\ln w_{i} & =0 & \qquad & (i=1,\ldots,{\rm N}),\\
+n_{i} & \geq0 &  & (i=1,\ldots,{\rm N}),\\
+0<w_{i} & \leq1 &  & (i=1,\ldots,{\rm N}),
 \end{alignat}
 following the use of the extended law of mass action equations
 \begin{equation}
-K_{m}=\prod_{i=1}^{\text{N}}(a_{i}w_{i})^{\nu_{mi}}.\label{eq:xlma-equations}
+K_{m}=\prod_{i=1}^{{\rm N}}(a_{i}w_{i})^{\nu_{mi}}.\label{eq:xlma-equations}
 \end{equation}
 It is associated with the M linearly independent chemical reactions
 among the N chemical species in equilibrium: 
 \begin{equation}
-0\rightleftharpoons\sum_{i=1}^{\text{N}}\nu_{mi}\alpha_{i}\qquad(m=1,\ldots,\text{M}),
+0\rightleftharpoons\sum_{i=1}^{{\rm N}}\nu_{mi}\alpha_{i}\qquad(m=1,\ldots,{\rm M}),
 \end{equation}
-where ${K\in\mathbb{R}^{\text{M}}}$ is the vector of \emph{equilibrium
+where ${K\in\mathbb{R}^{{\rm M}}}$ is the vector of \emph{equilibrium
 constants} of the reactions, with ${K_{m}=K_{m}(T,P)}$ denoting the
-equilibrium constant of the $m$th reaction, and $\nu\in\mathbb{R}^{\text{M\ensuremath{\times}N}}$
+equilibrium constant of the $m$th reaction, and $\nu\in\mathbb{R}^{{\rm M\ensuremath{\times}N}}$
 is the \emph{stoichiometric matrix} of these chemical reactions, with
 $\nu_{mi}$ corresponding to the stoichiometric coefficient of the
 $i$th species in the $m$th reaction. Conventionally,$\nu_{mi}$
 is positive if the $i$th species is a product in the $m$th reaction,
-and negative if it is a reactant. Moreover, ${w\in\mathbb{R}^{\text{N}}}$
+and negative if it is a reactant. Moreover, ${w\in\mathbb{R}^{{\rm N}}}$
 is the vector of \emph{species stability factors} that need to be
-solved along with the specie's amounts ${n\in\mathbb{R}^{\text{N}}}$.
+solved along with the specie's amounts ${n\in\mathbb{R}^{{\rm N}}}$.
 These factors are introduced to ensure that the extended law of mass
 action equations (\ref{eq:xlma-equations}) are valid even when some
 species in their corresponding reactions are unstable at equilibrium
@@ -1916,12 +2036,12 @@ species in their corresponding reactions are unstable at equilibrium
 When all species are stable at equilibrium, it follows that ${w_{i}=1}$
 and the xLMA equations reduce to the conventional LMA equations:
 \begin{equation}
-K_{m}=\prod_{i=1}^{\text{N}}a_{i}^{\nu_{mi}}.
+K_{m}=\prod_{i=1}^{{\rm N}}a_{i}^{\nu_{mi}}.
 \end{equation}
 The number of linearly independent chemical reactions among the N
-species in equilibrium is ${\text{M}=\text{N}-\text{C}}$, where ${\text{C}=\text{rank}(A)}$,
-and thus whenever the formula matrix $A$ is full rank, $\text{C}=\text{E}$
-and $\text{M}=\text{N}-\text{E}$. For more information on how to
+species in equilibrium is ${{\rm M}={\rm N}-{\rm C}}$, where ${{\rm C}={\rm rank}(A)}$,
+and thus whenever the formula matrix $A$ is full rank, ${\rm C}={\rm E}$
+and ${\rm M}={\rm N}-{\rm E}$. For more information on how to
 solve these equations and how they are related to the conventional
 law of mass action equations, see \citet{Leal2016c,Leal2017}.
 
@@ -1931,7 +2051,7 @@ Composition of each particle evolve according to the follwing set
 of ODEs:
 
 \begin{alignat*}{2}
-\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,\text{N}),
+\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,{\rm N}),
 \end{alignat*}
 where $T$ is the transport operator that consists of advection and
 diffusion, $R$ is reaction operator. First order splitting method:
@@ -1959,16 +2079,16 @@ n(t_{0}) & =\boldsymbol{\overline{n}}
 The fundamental mass conservation equations for both fluid and solid
 species are:
 \begin{alignat}{2}
-\frac{\partial n_{i}^{\text{f}}}{\partial t}+\nabla\cdot(\boldsymbol{v}n_{i}^{\text{f}}-D\nabla n_{i}^{\text{f}}) & =r_{i}^{\text{f}} & \qquad & (i=1,\ldots,\text{N}^{\text{f}}),\label{eq:cons-mass-fluid-species}\\
-\frac{\partial n_{i}^{\text{s}}}{\partial t} & =r_{i}^{\text{s}} &  & (i=1,\ldots,\text{N}^{\text{s}}),\label{eq:cons-mass-solid-species}
+\frac{\partial n_{i}^{{\rm f}}}{\partial t}+\nabla\cdot(\boldsymbol{v}n_{i}^{{\rm f}}-D\nabla n_{i}^{{\rm f}}) & =r_{i}^{{\rm f}} & \qquad & (i=1,\ldots,{\rm N}^{{\rm f}}),\label{eq:cons-mass-fluid-species}\\
+\frac{\partial n_{i}^{{\rm s}}}{\partial t} & =r_{i}^{{\rm s}} &  & (i=1,\ldots,{\rm N}^{{\rm s}}),\label{eq:cons-mass-solid-species}
 \end{alignat}
-where $n_{i}^{\text{f}}$ and $n_{i}^{\text{s}}$ are the \emph{bulk
+where $n_{i}^{{\rm f}}$ and $n_{i}^{{\rm s}}$ are the \emph{bulk
 concentration} of the $i$th fluid and solid species (in mol/m$^{3}$),
 respectively; $\boldsymbol{v}$ is the fluid pore velocity (in m/s);
 $D$ is the diffusion coefficient of the fluid species (in m$^{2}$/s);
-$r_{i}^{\text{f}}$ and $r_{i}^{\text{s}}$ are the rates of production\slash consumption
+$r_{i}^{{\rm f}}$ and $r_{i}^{{\rm s}}$ are the rates of production\slash consumption
 of the $i$th fluid and solid species (in mol\slash s), respectively,
-due to chemical reactions; and $\text{N}^{\text{f}}$ and $\text{N}^{\text{s}}$
+due to chemical reactions; and ${\rm N}^{{\rm f}}$ and ${\rm N}^{{\rm s}}$
 are the numbers of fluid and solid species, respectively. Note that
 the above equations assume a single fluid phase and common diffusion
 coefficients for all fluid species.
@@ -1976,39 +2096,39 @@ coefficients for all fluid species.
 By partitioning the species as fluid and solid species, the formula
 matrix $A$ can be conveniently represented as:
 \begin{equation}
-A=\begin{bmatrix}A^{\text{f}} & A^{\text{s}}\end{bmatrix},
+A=\begin{bmatrix}A^{{\rm f}} & A^{{\rm s}}\end{bmatrix},
 \end{equation}
-where $A^{\text{f}}$ and $A^{\text{s}}$ are the formula matrices
+where $A^{{\rm f}}$ and $A^{{\rm s}}$ are the formula matrices
 of the fluid and solid partitions (i.e., the matrices constructed
 from the columns of $A$ corresponding to fluid and solid species).
 The concentrations of elements in both fluid and solid partitions
-$b_{j}^{\text{f}}$ and $b_{j}^{\text{s}}$ can then be calculated
+$b_{j}^{{\rm f}}$ and $b_{j}^{{\rm s}}$ can then be calculated
 from the species concentrations in the same partition using: 
 \begin{alignat}{2}
-b_{j}^{\text{f}} & =\sum_{i=1}^{\text{N}^{\text{f}}}A_{ji}^{\text{f}}n_{i}^{\text{f}} & \qquad & (j=1,\ldots,\text{E})\\
-\shortintertext{and}b_{j}^{\text{s}} & =\sum_{i=1}^{\text{N}^{\text{s}}}A_{ji}^{\text{s}}n_{i}^{\text{s}} &  & (j=1,\ldots,\text{E}).
+b_{j}^{{\rm f}} & =\sum_{i=1}^{{\rm N}^{{\rm f}}}A_{ji}^{{\rm f}}n_{i}^{{\rm f}} & \qquad & (j=1,\ldots,{\rm E})\\
+\shortintertext{and}b_{j}^{{\rm s}} & =\sum_{i=1}^{{\rm N}^{{\rm s}}}A_{ji}^{{\rm s}}n_{i}^{{\rm s}} &  & (j=1,\ldots,{\rm E}).
 \end{alignat}
 
-Recall that the rates of production of the species $r_{i}^{\text{f}}$
-and $r_{i}^{\text{s}}$ are exclusively due to chemical reactions.
+Recall that the rates of production of the species $r_{i}^{{\rm f}}$
+and $r_{i}^{{\rm s}}$ are exclusively due to chemical reactions.
 Let $r_{i}$ denote the rate of production\slash consumption of the
 $i$th species in the system (i.e., using global index, and not a
 local index within the fluid or solid partition). From the mass conservation
 condition for the elements (chemical elements and electrical charge),
 it follows that:
 \begin{equation}
-\underset{\substack{\text{rate of production}\\
-\text{ of element \ensuremath{j}}
+\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j}}
 }
-}{\underbrace{\sum_{i=1}^{\text{N}}A_{ji}r_{i}}}=\underset{\substack{\text{rate of production}\\
-\text{ of element \ensuremath{j} in}\\
-\text{the fluid partition}
+}{\underbrace{\sum_{i=1}^{{\rm N}}A_{ji}r_{i}}}=\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j} in}\\
+{\rm the fluid partition}
 }
-}{\underbrace{\sum_{i=1}^{\text{N}^{\text{f}}}A_{ji}^{\text{f}}r_{i}^{\text{f}}}}+\underset{\substack{\text{rate of production}\\
-\text{ of element \ensuremath{j} in}\\
-\text{the solid partition}
+}{\underbrace{\sum_{i=1}^{{\rm N}^{{\rm f}}}A_{ji}^{{\rm f}}r_{i}^{{\rm f}}}}+\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j} in}\\
+{\rm the solid partition}
 }
-}{\underbrace{\sum_{i=1}^{\text{N}^{\text{s}}}A_{ji}^{\text{s}}r_{i}^{\text{s}}}}=\quad0,
+}{\underbrace{\sum_{i=1}^{{\rm N}^{{\rm s}}}A_{ji}^{{\rm s}}r_{i}^{{\rm s}}}}=\quad0,
 \end{equation}
 which is the mathematical statement for the fact that \emph{elements
 are neither created nor destroyed} during chemical reactions. We can
@@ -2016,7 +2136,7 @@ combine this result with equations (\ref{eq:cons-mass-fluid-species})
 and (\ref{eq:cons-mass-solid-species}) to derive the following conservation
 equations for the elements:
 \begin{equation}
-\frac{\partial b_{j}^{\text{s}}}{\partial t}+\frac{\partial b_{j}^{\text{f}}}{\partial t}+\nabla\cdot(\boldsymbol{v}b_{j}^{\text{f}}-D\nabla b_{j}^{\text{f}})=0\qquad(j=1,\ldots,\text{E}).
+\frac{\partial b_{j}^{{\rm s}}}{\partial t}+\frac{\partial b_{j}^{{\rm f}}}{\partial t}+\nabla\cdot(\boldsymbol{v}b_{j}^{{\rm f}}-D\nabla b_{j}^{{\rm f}})=0\qquad(j=1,\ldots,{\rm E}).
 \end{equation}
 
 Assume that all species, fluid and solid, are in \emph{local chemical
@@ -2031,15 +2151,15 @@ The operator splitting steps at the $k$th time step are:
 \item update the concentrations of the elements in the fluid partition
 using:
 \[
-\frac{\tilde{b}_{j}^{\text{f},k+1}-b_{j}^{\text{f},k}}{\Delta t}+\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{\text{f},k+1}-D\nabla\tilde{b}_{j}^{\text{f},k+1})=0\qquad(j=1,\ldots,\text{E}),
+\frac{\tilde{b}_{j}^{{\rm f},k+1}-b_{j}^{{\rm f},k}}{\Delta t}+\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{{\rm f},k+1}-D\nabla\tilde{b}_{j}^{{\rm f},k+1})=0\qquad(j=1,\ldots,{\rm E}),
 \]
-where $\tilde{b}_{j}^{\text{f},k}$ is the known concentration of
-the $j$th element at time step $k$ in the fluid partition and $\tilde{b}_{j}^{\text{f},k+1}$
+where $\tilde{b}_{j}^{{\rm f},k}$ is the known concentration of
+the $j$th element at time step $k$ in the fluid partition and $\tilde{b}_{j}^{{\rm f},k+1}$
 is its unknown concentration at the next time step. Note that an implicit
 scheme is assumed.
 \item update the total concentrations of the elements:
 \begin{equation}
-b_{j}^{k+1}=\tilde{b}_{j}^{\text{f},k+1}+b_{j}^{\text{s},k}.
+b_{j}^{k+1}=\tilde{b}_{j}^{{\rm f},k+1}+b_{j}^{{\rm s},k}.
 \end{equation}
 \item calculate the concentrations of the species, $n_{i}^{k+1}$, in each
 mesh cell, using the full or smart chemical reaction algorithm. For
