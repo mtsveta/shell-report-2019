@@ -22,7 +22,7 @@
 \title{Annual report 2019:\\
 \emph{Reaktoro as the chemical reaction solver in Shell's reservoir simulator}}
 \author{Allan M. M. Leal and Svetlana Kyas \\
-{\scriptsize Institute of Geophysics, Department of Earth Sciences, ETH Zürich, Switzerland}}
+{\scriptsize Institute of Geophysics, Department of Earth Sciences, ETH Z\"urich, Switzerland}}
 \date{02.12.2019}
 
 \maketitle
@@ -32,7 +32,7 @@
 The report in dedicated to describe the results obtained during the first year of the project 
 ``Reaktoro as the chemical reaction solver in Shell's reservoir simulator'. It is mainly focused 
 on the first task of the project plan, i.e., ``Accelerating chemical kinetics in reactivate transport 
-(RT) calulations''. Below, we summarise the main motivation of the this task. During reactivate 
+(RT) calculations''. Below, we summarise the main motivation of the this task. During reactivate 
 transport modeling, 
 the computational cost associated with chemical equilibrium and chemical kinetics speciation 
 calculations can be 10–10'000 times higher than that of fluid flow and solute transport simulations. 
@@ -100,7 +100,7 @@ as during this single iteration, expensive thermodynamic models would still have
 matrix equations be solved, when using a Newton-based GEM or LMA algorithm. In view of this, a 
 substantial acceleration of these calculations can be achieved if those costly operations
 can be bypassed whenever possible. Similarly, advanced methods for solving system of ODEs has been 
-developed during couple of last decades {TODO: add citation to classic works \color{red}\cite{}}. 
+developed during couple of last decades { \color{red} TODO: add citation to classic works \cite{}}. 
 However, we aim to develop such an approach that sidesteps costly numerical integration of the system 
 that governs the evolution of kinetics species within considered transport step.
 
@@ -725,7 +725,7 @@ Next time, when the algorithm needs to solve a new kinetic path, it first retrie
 $(n^\circ_k)^\star$ to the given $n^\circ_k$ among all saved kinetic initial conditions in 
 $\mathcal{I}_k$. Next, the previously calculated potentially suitable kinetic state $n_k$ is used as 
 a reference to estimate the new kinetic state using equation~(\ref{eq:smart-estimate-kinetics}).
-At the end, it remains to control whether the estimated kinetic state $\bar{n}_k$$ satisfies the 
+At the end, it remains to control whether the estimated kinetic state $\bar{n}_k$ satisfies the 
 variational acceptance criterion defined by Eq.~(\ref{eq:acceptance-test-rates}). If this inequality 
 is satisfied, then the calculation ends. Otherwise, a complete numerical integration with initial 
 state $n^\circ_k$ is performed using the system Eq. \ref{eq:kinetics}. It is followed by the
