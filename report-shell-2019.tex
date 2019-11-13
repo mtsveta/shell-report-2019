@@ -3,6 +3,8 @@
 \documentclass[12pt,english,sort&compress]{article}
 \input{custom-packages}
 
+\usepackage{wasysym} % for fullmoon, newmoon symbols
+
 %\makeatother
 
 % Definition of \maketitle
@@ -38,7 +40,7 @@ the computational cost associated with chemical equilibrium and chemical kinetic
 calculations can be 10–10'000 times higher than that of fluid flow and solute transport simulations. 
 Such geochemical calculations must be performed in each mesh cell at every time step of the simulation, 
 incurring high computing costs. To radically reduce these, we consider a new \emph{on-demand machine 
-learning strategy} (also referred as \emph{smart algorithm}) that, during reactive transport 
+learning strategy} (ODML) (also referred as \emph{smart algorithm}) that, during reactive transport 
 simulations, enables the chemical speciation to be quickly and accurately predicted using stored 
 results of previous chemical equilibrium calculations performed within the simulation session. 
 We demonstrate the applicability and utility of this algorithm in a reactive transport modeling 
@@ -188,6 +190,7 @@ the software \texttt{\href{https://tcg.mae.cornell.edu/x2f_mpi/}{${\rm x2f_mpi}$
 studied for the numerical simulations of a two-dimensional gaseous detonation wave propagation process 
 in \citet{Dong2007, Dong2009, WuDongLi2018}. 
 
+\begin{comment}
 The main difference of algorithm used in the current work from the ISAT method is that it first aims 
 to accelerated not only kinetic part of chemical modeling but also equilibrium speciation calculations. 
 They are triggered during the evaluation of the reaction rates as kinetic paths are being evaluated, as 
@@ -197,6 +200,34 @@ exact evaluation. This makes predictions of the new chemical equilibrium speciat
 unlike purely mathematical approach of controlling the error by keeping track of the so-called 
 ``confidence'' region, we use an approach that accounts for chemical properties (such as activities or 
 potentials) to decide on the accuracy/acceptance of the predicted state.
+\end{comment}
+
+%---------------------------------------------------------------------------------------------------%
+In the presentation of the \emph{on-demand machine learning} (ODML) algorithm given later, 
+one can observe similarities with ISAT on the approach for speeding up the output of non-linear 
+problems with similar inputs. It must be noted, however, that ODML 
+%
+\begin{enumerate}[wide, labelwidth=!, labelindent=0pt]
+\item[\emph{(i)}] aims to be a more \textbf{general-purpose acceleration algorithm} (instead of 
+being applied exclusively to chemical kinetics problems),
+%
+\item[\emph{(ii)}] uses \textbf{higher-order sensitivity derivatives} for improved predictive 
+accuracy, significant reduced number of on-demand training operations, and superior error analysis, 
+%
+\item[\emph{(iii)}] provides the capability for \textbf{more flexible error controls} (rather than
+a purely geometric one based on hyper-ellipsoids) that may consider chemical\slash physical\slash 
+engineering insights on the acceptance decision, and, finally,
+%
+\item[\emph{(iv)}] uses \textbf{alternative search operations} that do not rely exclusively on 
+NN search, which is prone to fail for high-dimensional input spaces (commonly-known in 
+the statistical and machine learning literature as the \emph{curse of dimensionality}). 
+\end{enumerate}
+%
+A dedicated C++ library project for ODML is envisioned, in which the exact higher-order sensitivity
+derivatives mentioned previously are calculated using \texttt{\href{http://autodiff.github.io}{autodiff}}
+(\citealt{autodiff}), a modern and fast C++ library for higher-order automatic differentiation 
+computations, whose on-going development is specifically carried out towards achieving the planned 
+algorithm's goals outlined above.
 
 %---------------------------------------------------------------------------------------------------%
 In addition to the ISAT approach, several alternative storage-based approaches have been suggested in 
@@ -224,7 +255,9 @@ were used for training the statistical model. The various constructed surrogate 
 used in the reactive transport simulation. Because these surrogate models relied on statistical methods, 
 mass conservation was often not accurate during their machine learning computations (i.e., the amounts 
 of chemical elements in the estimated-output species amounts did not correspond accurately to the 
-values given in the input). The work \cite{Laloy2019} presents a comparison of several approaches 
+values given in the input). 
+
+The work \cite{Laloy2019} presents a comparison of several approaches 
 (Gaussian processes (GP), polynomial chaos expansion (PCE) and deep neural networks (DNNs)), which are 
 used to emulate CPU-intensive reactive transport models. However, considered methods are subjected 
 to uncertainties propagation and, as result, deteriorating accuracy. For relatively simple problems 
@@ -698,7 +731,7 @@ Next time, when the algorithm is asked to solve a new equilibrium problem, it fi
 searching for the closest $(T,P,b_e)^{\star}$ to the given $(T,P,b_e)$ among all saved equilibrium 
 input conditions in $\mathcal{I}_e$. Once the search is concluded, the previously calculated
 potentially suitable equilibrium state is used to estimate the new equilibrium state using 
-equation~(\ref{eq:smart-estimate}).
+Eq.~(\ref{eq:smart-estimate}).
 %---------------------------------------------------------------------------------------------------%
 Finally, it remains to check if the estimated equilibrium state is accurate enough, using the 
 acceptance test defined by Eq.~(\ref{eq:acceptance-test-mu}). If the test succeeds, then the 
@@ -707,7 +740,8 @@ performed using GEM algorithm $n_e=\varphi(T,P,b_e)$. It is followed by similar 
 operations, as presented above, when the smart equilibrium algorithm was invoked for the first time.
 
 %---------------------------------------------------------------------------------------------------%
-The smart algorithm for kinetically controlled reactions is presented with the flowchart in Figure~\ref{fig:algorithm-diagram-kinetics}. It begins with integrating the system of ODEs 
+The smart algorithm for kinetically controlled reactions is presented with the flowchart in 
+Figure~\ref{fig:algorithm-diagram-kinetics}. It begins with integrating the system of ODEs 
 Eq.~(\ref{eq:kinetics}) for reconstruction of kinetic species. After that or simultaneously, 
 the sensitivity derivatives $\tfrac{n_k}{n^\circ_k}$ are calculated. Once this information is 
 collected, it is saved for future fast and accurate predictions of kinetic states, where the input 
@@ -724,7 +758,7 @@ of equilibrium species $n_e$.
 Next time, when the algorithm needs to solve a new kinetic path, it first retrieves the closest 
 $(n^\circ_k)^\star$ to the given $n^\circ_k$ among all saved kinetic initial conditions in 
 $\mathcal{I}_k$. Next, the previously calculated potentially suitable kinetic state $n_k$ is used as 
-a reference to estimate the new kinetic state using equation~(\ref{eq:smart-estimate-kinetics}).
+a reference to estimate the new kinetic state using Eq.~(\ref{eq:smart-estimate-kinetics}).
 At the end, it remains to control whether the estimated kinetic state $\bar{n}_k$ satisfies the 
 variational acceptance criterion defined by Eq.~(\ref{eq:acceptance-test-rates}). If this inequality 
 is satisfied, then the calculation ends. Otherwise, a complete numerical integration with initial 
@@ -735,37 +769,37 @@ for the first time.
 %---------------------------------------------------------------------------------------------------%
 \section{Results\label{sec:Results}}
 
-We present here an example of using the smart chemical equilibrium algorithm in
-a reactive transport simulation and show how its performance and precision compare
-to the use of a conventional chemical equilibrium algorithm, based
-on the Gibbs energy minimization \citep{Leal2016a,Leal2017} in the same simulation. For
-details on how we solve the reactive transport equations, see Appendix~\ref{sec:Reactive-Transport-Equations}.
+We present here an example of using the smart chemical equilibrium / kinetics algorithm in a 
+reactive transport simulation and show how its performance and precision compare to the use of a 
+conventional chemical equilibrium / kinetics algorithms, based on either the Gibbs energy 
+minimization for equilibrium species \citep{Leal2016a,Leal2017} or numerical integration for 
+kinetically controlled ones. Moreover, we demonstrate the results of coupling Reaktoro to an 
+open-source finite element library Firedrake that is used to model transport after the splitting of 
+reactive transport equation. For details on how we solve the reactive transport equations, see 
+Appendix~\ref{sec:Reactive-Transport-Equations}.
 
 \subsection{Reactive Transport Problem\label{subsec:Reactive-Transport-Problem}}
 
-The reactive transport modeling example carried out
-in this work is illustrated in Figure~\ref{fig:illustration-reactive-transport-model}.
-Here, the initial mineral composition of the horizontal porous
-rock column consists of 98\%$_{{\rm vol}}$ SiO$_{2}$(quartz) and 2\%$_{{\rm vol}}$
-CaCO$_{3}$(calcite), with an initial porosity of 10\% ($\phi = 0.1$). The resident
-fluid is a 0.70~molal~NaCl brine in equilibrium with the rock minerals
-(our calculated equilibrium state indicates a pH of about 9.2). The
-aqueous fluid, injected on the left side of this rock column, is the result
-of mixing 1~kg of water with 0.90~moles of NaCl, 0.05~moles of MgCl$_{2}$,
-0.01~moles of CaCl$_{2}$, and 0.75~moles of CO$_{2}$. This amount
-of CO$_{2}$ is enough to bring the aqueous fluid close to CO$_{2}$
-saturation at 100 bar, and thus in an acidic state, with a calculated pH of~3.05.
-The temperature and pressure of both resident and injected fluids
-are 60~°C and 100~bar, respectively. The simplified reactive transport modeling
-assumes a constant fluid
-pore velocity (set in each cell) of $\boldsymbol{v}=\unit[1]{m/week}$ ($\unit[5.95\cdot10^{-6}]{m/s}$)
-and the same diffusion coefficient $D=\unit[10^{-9}]{m^{2}/s}$ for
-all fluid species. The longitudinal dispersivity is estimated as $D \, \phi\,/\,\boldsymbol{v}$, which in this case is 100 times less than the usually accepted dispersivity of $10^{-3}$ m.
+%---------------------------------------------------------------------------------------------------%
+The reactive transport modeling example carried out in this work is illustrated in 
+Figure~\ref{fig:illustration-reactive-transport-model}. Here, the initial mineral composition of 
+the horizontal porous rock column consists of 98\%$_{{\rm vol}}$ SiO$_{2}$(quartz) and 
+2\%$_{{\rm vol}}$ CaCO$_{3}$(calcite), with an initial porosity of 10\% ($\phi = 0.1$). The resident 
+fluid is a 0.70~molal~NaCl brine in equilibrium with the rock minerals (our calculated equilibrium 
+state indicates a pH of about 9.2). The aqueous fluid, injected on the left side of this rock column, 
+is the result of mixing 1~kg of water with 0.90~moles of NaCl, 0.05~moles of MgCl$_{2}$,
+0.01~moles of CaCl$_{2}$, and 0.75~moles of CO$_{2}$. This amount of CO$_{2}$ is enough to bring 
+the aqueous fluid close to CO$_{2}$ saturation at 100 bar, and thus in an acidic state, with a 
+calculated pH of~3.05. The temperature and pressure of both resident and injected fluids
+are 60~°C and 100~bar, respectively. The simplified reactive transport modeling assumes a constant 
+fluid pore velocity (set in each cell) of $\boldsymbol{v}=\unit[1]{m/week}$ 
+($\unit[5.95\cdot10^{-6}]{m/s}$) and the same diffusion coefficient $D=\unit[10^{-9}]{m^{2}/s}$ 
+for all fluid species. The longitudinal dispersivity is estimated as $D \, \phi\,/\,\boldsymbol{v}$, 
+which in this case is 100 times less than the usually accepted dispersivity of $10^{-3}$ m. 
+Considered 1~m rock is discretized by the column mesh with 100~cells. The reactive transport 
+simulation runs with 10`000 steps of uniform time step of 30~min, which results in 1'000'000 
+chemical kinetics and equilibrium evaluations.
 %
-Our intention in this proof-of-concept
-paper is to demonstrate the potential of the on-demand learning algorithm,
-which will be followed by more advanced demonstrations in future work
-(e.g., more heterogeneous media, three-dimensional meshes, etc.).
 
 \begin{figure}
 \begin{centering}
@@ -777,26 +811,24 @@ some details on the injection fluid and rock composition, transport
 parameters, and numerical discretization.}
 \end{figure}
 
-\subsection{Pitzer activity model. Local equilibrium assumption.  \label{subsec:part-1}}
 
+\subsection{Smart chemical equilibrium algorithm with the Pitzer activity model \label{subsec:part-1}}
+
+%---------------------------------------------------------------------------------------------------%
 In the chemical model part, the activity coefficients of the aqueous species are calculated using
-the Pitzer model \citep{Pitzer1973}, formulated by \citet{Harvie1984},
-except for the aqueous species CO$_{2}$(aq), for which the \citet{drummond1981boiling}
-model is applied. The standard chemical potentials of the species
-are calculated using the equations of state of \citet{Helgeson1974,Helgeson1978,Tanger1988,Shock1988}
-and \citet{Shock1992}. The database file \texttt{slop98.dat,} from
-the software SUPCRT92 \citep{Johnson1992}, is used to obtain corresponding
-parameters. The equation of state of \citet{Wagner2002} is chosen
-to compute the density of water and its temperature and pressure derivatives.
-These prerequisites yield the system of 36~chemical species with 4~phases and 9~chemical elements.
-Although it could be considered in principle, the dissolution and precipitation
-kinetics of both calcite and dolomite minerals are neglected in this
-particular example (i.e., the local equilibrium assumption is employed).
-This way, we can assess how accurate the smart chemical equilibrium
-predictions are when phase transitions occur (e.g., when calcite
-fully dissolves and when dolomite starts to precipitate). We remark that, in the meanwhile,  the extension of the on-demand learning algorithm for
-accelerating chemical kinetics calculations is an on-going project by the authors. 
-
+the Pitzer model \citep{Pitzer1973}, formulated by \citet{Harvie1984}, except for the aqueous 
+species CO$_{2}$(aq), for which the \citet{drummond1981boiling} model is applied. The standard 
+chemical potentials of the species are calculated using the equations of state of 
+\citet{Helgeson1974,Helgeson1978,Tanger1988,Shock1988} and \citet{Shock1992}. The database file 
+\texttt{slop98.dat,} from the software SUPCRT92 \citep{Johnson1992}, is used to obtain corresponding
+parameters. The equation of state of \citet{Wagner2002} is chosen to compute the density of water and 
+its temperature and pressure derivatives. These prerequisites yield the system of \emph{36~chemical 
+species} with \emph{4~phases} and \emph{9~chemical elements}. First, we neglect the dissolution and 
+precipitation kinetics of both calcite and dolomite minerals (i.e., the local equilibrium assumption 
+is employed). This way, we aim to assess how accurate the smart chemical equilibrium predictions are 
+when phase transitions occur (e.g., when calcite fully dissolves and when dolomite starts to 
+precipitate). 
+%
 \begin{figure}
 \begin{centering}
 \begin{minipage}[t]{0.5\columnwidth}%
@@ -824,66 +856,82 @@ accelerating chemical kinetics calculations is an on-going project by the author
 \par\end{centering}
 \caption{\label{fig:calcite-dolomite}
 %
-The volume percent ($\%_{{\rm vol}}$)
-of the minerals calcite and dolomite along the horizontal rock core as well as the
-concentrations of selected aqueous species (molal) at three different
-times: 30~minutes, 5~hours, and 50~days (after 1, 10, and 2400~time
-steps of 30~minutes each, respectively). The \emph{solid lines} correspond
-to the results of the reactive transport simulation provided by conventional
-chemical equilibrium calculations based on full Gibbs energy minimization calculations performed in every cell of each time step.
-The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
-correspond to the values generated by the smart chemical equilibrium calculations.
-\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate those cells, where successful
-fast and accurate smart equilibrium predictions were preformed successfully. The \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells,
-where full Gibbs energy minimization calculations were required and where, thus, \emph{on-demand learning} occurred.}
+The volume percent ($\%_{{\rm vol}}$) of the minerals calcite and dolomite along the horizontal 
+rock core as well as the concentrations of selected aqueous species (molal) at three different times: 
+30~minutes, 5~hours, and 50~days (after 1, 10, and 2400~time steps of 30~minutes each, respectively). 
+The \emph{solid lines} correspond to the results of the reactive transport simulation provided by 
+conventional chemical equilibrium calculations based on full Gibbs energy minimization calculations 
+performed in every cell of each time step. The circles ${\rm (}\bullet{\rm )}$ and 
+${\rm (}\circ{\rm )}$ correspond to the values generated by the smart chemical equilibrium 
+calculations. \emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate those cells, where successful
+fast and accurate smart equilibrium predictions were preformed successfully. The 
+\emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells, where full Gibbs energy minimization 
+calculations were required and where, thus, \emph{on-demand learning} occurred.}
 \end{figure}
+%---------------------------------------------------------------------------------------------------%
 
+\subsubsection{Smart Prediction Analysis \label{subsec:Performance-and-Accuracy}}
+%
+Figure~\ref{fig:calcite-dolomite} demonstrates the accuracy of the smart algorithm by comparing its 
+results to the reference values generated by the conventional approach. In particular, it depicts the 
+volume of minerals calcite, CaCO$_{3}$, and dolomite, CaMg(CO$_{3}$)$_{2}$ (left), as well as 
+the concentrations of aqueous species Ca$^{2+}$(aq), Mg$^{2+}$(aq), HCO$_{3}^{-}$(aq), CO$_{2}$(aq), 
+and H$^{+}$(aq) (right) along the horizontal rock column at three different simulation times: 
+30~minutes, 5~hours, and 50~days. As calcite dissolves, Ca$^{2+}$(aq) ions are released into 
+the aqueous solution, then reacting with the incoming Mg$^{2+}$(aq) ions from the left boundary 
+to precipitate dolomite. After 30~minutes of injecting the CO$_{2}$-saturated brine (i.e., after a 
+single time step), one observes a slight dissolution of calcite and corresponding precipitation of 
+dolomite. 
+%
+The injected CO$_{2}$-saturated brine increases the local concentrations of carbolic species, 
+CO$_{2}$(aq) and HCO$_{3}^{-}$(aq). The local concentrations of ions Ca$^{2+}$(aq) increases as a 
+result of CaCO$_{3}$ dissolution. The precipitated dolomite, however, is gradually dissolved, as 
+the injection of the acidic CO$_{2}$-saturated fluid continues. This can be seen in 
+Figure~\ref{fig:calcite-dolomite} (bottom, left), in the very left region of the rock core, where 
+neither calcite nor dolomite are present after 50~days of continuous fluid injection. At the same 
+time, after 50~days of fluid injection (i.e., after 2400~time steps), the Mg$^{2+}$(aq) concentration 
+drops sharply between core distances 0.1~m and 0.2~m, which is exactly where dolomite is currently 
+precipitating. Moreover, in the same region Ca$^{2+}$(aq) concentration locally jumps as calcite 
+dissolves.
+%---------------------------------------------------------------------------------------------------%
 
-\subsection{Smart Prediction Analysis\label{subsec:Performance-and-Accuracy}}
+We observe in Figure~\ref{fig:calcite-dolomite} that the use of the smart chemical equilibrium 
+algorithm \emph{does not} compromise accuracy during the simulation. In this figure, the solid 
+circles ${\rm (}\bullet{\rm )}$ represent a successful smart prediction of an accurate equilibrium
+state at that cell position and time step, whereas the empty circles ${\rm (}\circ{\rm )}$ represent 
+a failed attempt in this respect. The latter happens because of the absence of a previously solved 
+chemical equilibrium problem similar enough to the new one. The empty circles ${\rm (}\circ{\rm )}$ 
+also denote cells at which an on-demand learning operation was triggered, resulting in GEM 
+calculation (that would be done anyway if the smart equilibrium algorithm was not used). These 
+on-demand learning operations are triggered in different mesh cells, either on the same or different 
+time steps. We remark that the current implementation of the algorithm does not rely on any spatial 
+or temporal information, although this could be explored for faster search operations in the future.
+%---------------------------------------------------------------------------------------------------%
 
-Figure~\ref{fig:calcite-dolomite} demonstrates the accuracy of the smart algorithm by comparing its results to the reference values generated by the conventional approach. In particular, it
-shows the volume of minerals calcite,
-CaCO$_{3}$, and dolomite, CaMg(CO$_{3}$)$_{2}$ (left), as well
-as the concentrations of aqueous species Ca$^{2+}$(aq), Mg$^{2+}$(aq),
-HCO$_{3}^{-}$(aq), CO$_{2}$(aq), and H$^{+}$(aq) (right) along
-the horizontal rock column at three different simulation times: 30~minutes, 5~hours,
-and 50~days. As calcite dissolves, Ca$^{2+}$(aq) ions are released
-into the aqueous solution, then reacting with the incoming Mg$^{2+}$(aq)
-ions from the left boundary to precipitate dolomite. After 30~minutes
-of injecting the CO$_{2}$-saturated brine (i.e., after a single time
-step), one observes a slight dissolution of calcite and corresponding
-precipitation of dolomite. The injected CO$_{2}$-saturated brine
-increases the local concentrations of carbonic species, CO$_{2}$(aq)
-and HCO$_{3}^{-}$(aq). The local concentrations of ions Ca$^{2+}$(aq)
-increases as a result of CaCO$_{3}$ dissolution. The precipitated
-dolomite, however, is gradually dissolved, as the injection of the
-acidic CO$_{2}$-saturated fluid continues. This can be seen in Figure~\ref{fig:calcite-dolomite}
-(bottom, left), in the very left region of the rock core, where neither
-calcite nor dolomite are present after 50~days of continuous fluid
-injection. At the same time, after 50~days of fluid injection (i.e.,
-after 2400~time steps), the Mg$^{2+}$(aq) concentration drops sharply
-between core distances 0.1~m and 0.2~m, which is exactly where dolomite
-is currently precipitating. Moreover, in the same region Ca$^{2+}$(aq)
-concentration locally jumps as calcite dissolves.
+From Figure~\ref{fig:calcite-dolomite}, we also can see that during the first time step of 
+the simulation (30~minutes), the smart equilibrium algorithm was able to accurately estimate the 
+equilibrium states in most mesh cells (see the solid circles $\bullet$). In other words, the 
+algorithm learned enough distinct chemical equilibrium problems on a few upstream cells (near
+the left boundary), which then could be successfully used for quick and accurate estimates for the 
+rest of the cells downstream. To be precise, injecting the reactive fluid inside the rock core 
+promotes strong compositional changes in both resident fluid and rock minerals. Because
+of this, during the first time step, the algorithm requires \emph{on-demand learning} in 6 cells next 
+to the left boundary (see the empty circles $\circ$ in Figure~\ref{fig:calcite-dolomite}). As the 
+perturbation fronts move down the rock core, additional learning is performed as needed to fulfil 
+a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$ and $\epsilon_{{\rm abs}}=10^{-8}$ are 
+used in Eq.~(\ref{eq:acceptance-test-mu}). As seen in Figure~\ref{fig:calcite-dolomite} (after 5h, 
+or 10~time steps), 2~cells required a full and expensive chemical equilibrium calculation to both 
+ensure accuracy and enable on-demand learning. 
+{\color{red}
+We also point out that after curtain amount of the 
+time steps, trainings that are expected to be triggered at the cells, where a change of phases is 
+happening, are not occurring any more. The algorithm has already 
+gathered enough information about the system on the first time steps (while dolomite 
+just started its precipitation and calcite its dissolution) that it does not have to learn any more
+further down the road .}
+%---------------------------------------------------------------------------------------------------%
 
-We observe in Figure~\ref{fig:calcite-dolomite} that the use of the
-smart chemical equilibrium algorithm \emph{does not} compromise accuracy
-during the simulation. In this figure, the solid circles ${\rm (}\bullet{\rm )}$
-represent a successful smart prediction of an accurate equilibrium
-state at that cell position and time step, whereas the empty circles
-${\rm (}\circ{\rm )}$ represent a failure in this respect. The
-latter happens because of the absence of a previously solved chemical
-equilibrium problem similar enough to the new one. The empty circles
-${\rm (}\circ{\rm )}$ also denote cells at which an on-demand learning
-operation was triggered, resulting in a Gibbs energy minimization
-calculation (that would be done anyway if the smart equilibrium
-algorithm was not used). These on-demand learning operations are triggered
-in different mesh cells, either on the same or different time steps.
-We remark that the current implementation of the algorithm does not
-rely on any spatial or temporal information, although this could be
-explored for faster search operations in the future.
-
-\begin{figure}
+\begin{figure}[!th]
 \begin{centering}
 \begin{minipage}[t]{0.5\columnwidth}%
 \begin{center}
@@ -903,175 +951,257 @@ explored for faster search operations in the future.
 \end{minipage}
 \par\end{centering}
 \caption{\label{fig:error}
-Error between results provided by the smart algorithm and reference values provided by the conventional approach. 
-The $\ell_1$-norm of the error in the Calcite and Dolomite (left) and in aqueous species (right).}
+Error between results provided by the smart algorithm and reference values provided 
+by the conventional approach. The $\ell_1$-norm of the error in the Calcite and Dolomite (left) 
+and in aqueous species (right).}
 \end{figure}
 
-From Figure~\ref{fig:calcite-dolomite}, we also can see that during
-the first time step of the simulation (30~minutes), the smart equilibrium
-algorithm was able to accurately estimate the equilibrium states in
-most mesh cells (see the solid circles $\bullet$). In other words, the algorithm learned enough
-distinct chemical equilibrium problems on a few upstream cells (near
-the left boundary), which then could be successfully used for quick and
-accurate estimates for the rest of the cells downstream. To be precise,
-injecting the reactive fluid inside the rock core promotes strong
-compositional changes in both resident fluid and rock minerals. Because
-of this, during the first time step, the algorithm requires \emph{on-demand
-learning} in 6 cells next to the left boundary (see the empty circles
-$\circ$ in Figure~\ref{fig:calcite-dolomite}). As the perturbation
-fronts move down the rock core, additional learning is performed as
-needed to fulfil a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$
-and $\epsilon_{{\rm abs}}=10^{-8}$ are used in equation~(\ref{eq:acceptance-test-mu}).
-As seen in Figure~\ref{fig:calcite-dolomite} (after 5h, or 10~time
-steps), 2~cells required a full and expensive chemical equilibrium
-calculation to both ensure accuracy and enable on-demand learning.
+%---------------------------------------------------------------------------------------------------%
+The percentage of the error measured in $\ell_1$-norm is illustrated in Figure \ref{fig:error}. 
+We see that the $\ell_1$-norm of the error in the Calcite and Dolomite lies in the range 
+$[10^{-5}, 10^{-2}]$, whereas the error in aqueous species might get an order higher 
+$[10^{-5}, 10^{-1}]$. It can be explain with a slight delay in the smart algorithm to reproduce sharp 
+changes on ions concentration. This yields that the uncertainty in minerals' volumes is bounded by 
+1~\%, whereas, the inaccuracy of the aqueous concentration reproduced by the on-demand learning might 
+get up till 16~\% in several cells throughout simulation.
 
-{\color{blue}
-The percentage of the error measured in $\ell_1$-norm is illustrated in Figure \eqref{fig:error}. We see that the $\ell_1$-norm of the error in the Calcite and Dolomite lies in the range $[10^{-5}, 10^{-2}]$, whereas the error in aqueous species might get an order higher $[10^{-5}, 10^{-1}]$. It can be explain with a slight delay in the smart algorithm to reproduce sharp changes on ions concentration. This means that the uncertainty in minerals' volumes is bounded by 1 \%. However, inaccuracy of the aqueous concentration reproduced by the on-demand learning might get up till 16 \% in several cells throughout simulation.}
-
-\begin{figure}
+\begin{figure}[!ht]
 \begin{centering}
-\includegraphics[width=1.0\textwidth]{figures/equilibrium/on-demand-learning-countings} \\
-\includegraphics[width=1.0\textwidth]{figures/equilibrium/on-demand-learning-total}
+\includegraphics[width=0.7\textwidth]{figures/equilibrium/on-demand-learning-countings} \\
+\includegraphics[width=0.7\textwidth]{figures/equilibrium/on-demand-learning-total}
 \par\end{centering}
-\caption{\label{fig:number-training-1}The accumulated number of \emph{on-demand
-learning} 
+\caption{\label{fig:number-training-1}
+The number of \emph{on-demand learning} operations triggered by the smart chemical equilibrium 
+algorithm w.r.t. to the reactive transport steps (on the top) and their accumulated number during 
+the reactive transport simulation (on the bottom) using a column mesh with 100~cells. The simulation 
+finished after 10'000 time steps and required thus the solution of 1'000'000 chemical equilibrium 
+problems. Only 258 (or 0.03\%) of these were solved using GEM calculation; the majority (99.97\%) 
+were quickly and accurately estimated with the smart chemical equilibrium algorithm.}
+\end{figure}
+
+%---------------------------------------------------------------------------------------------------%
+Figure~\ref{fig:number-training-1} presents the number of on-demand learning operations occurring 
+(on the top) and accumulated (on the bottom) during the reactive transport simulation. For the top 
+subplot, note rather high total number growth on the initial time steps, where the smart chemical 
+equilibrium algorithm is actively learning new chemical states. That corresponds to the bottom 
+illustration, where for the first RT steps full Gibbs energy minimization calculations are needed 
+to be performed in up to 6 cells out of 100 ones. 
 %
-operations triggered by the smart chemical equilibrium algorithm
-during the reactive transport simulation using a column mesh with 100~cells.
-The simulation finished after 10'000 time steps and required thus
-the solution of 1'000'000 chemical equilibrium problems. Only 258
-(or 0.03\%) of these were solved using the full Gibbs energy minimization
-calculation; the majority (99.97\%) were quickly and accurately estimated
-with the smart chemical equilibrium algorithm.}
-\end{figure}
+This is the result of the incoming brine perturbing the fluid composition on the left side of the 
+horizontal rock core. As time passes, the increment of total on-demand learning operations becomes 
+very small, about 1~or 2~cells per time step. The latter can be observed on the top subplot in Figure~\ref{fig:number-training-1}). 
+%
+Eventually, the smart prediction algorithm becomes knowledgeable enough about the recurring 
+equilibrium states in the simulation, so that it can quickly and accurately perform all subsequent
+speciations without further learning, or with just a few occasional training acts. We remark that 
+this result is specific to the reactive transport example investigated here. In a reactive transport 
+problem with more heterogeneity, for example, one could expect somewhat more on-demand learning 
+requirements. We plan to investigate this dependency in future work.
 
-Figure~\ref{fig:number-training-1} presents the number of on-demand
-learning operations accumulated during the reactive transport simulation. Note
-a steep growth of the initial time steps, where the smart chemical
-equilibrium algorithm is actively learning new chemical states.
-This is the result of the incoming brine perturbing the fluid composition
-on the left side of the horizontal rock core. As time passes, the increment of
-such on-demand learning operations becomes very small, about 1~or
-2~cells per time step. Eventually, the smart prediction algorithm
-becomes knowledgeable enough about the recurring equilibrium states
-in the simulation, so that it can quickly and accurately perform all subsequent
-equilibrium calculations without further learning (i.e., full Gibbs energy minimization calculations), or with just a few occasional
-training acts. We remark that this result is specific to the reactive transport
-example investigated here. In a reactive transport problem with more
-heterogeneity, for example, one could expect somewhat more on-demand
-learning requirements. We plan to investigate this dependency in future work.
-
+%---------------------------------------------------------------------------------------------------%
 \begin{figure}
 \begin{centering}
-\includegraphics[width=0.7\textwidth]{figures/equilibrium/computing-costs}
+\includegraphics[width=0.7\textwidth]{figures/equilibrium/computing-costs-with-ideal}
 \par\end{centering}
-\caption{\label{fig:computational-cost}Comparison of the computing costs (CPU
-time in microseconds) of transport, conventional, and smart chemical
-equilibrium calculations during each time step of the reactive transport
-simulation. The cost of equilibrium calculations per time step is
-the sum of the individual costs in each mesh cell, whereas the cost
-of transport calculations per time step is the time required when
-solving the discretized algebraic transport equations.}
+\caption{\label{fig:computational-cost}
+Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
+chemical equilibrium calculations, and so-called \emph{zero-search-cost} smart equilibrium 
+calculations during each time step of the reactive transport simulation. The cost of equilibrium 
+calculations per time step is the sum of the individual costs in each mesh cell,  whereas the cost 
+of transport calculations per time step is the time required when solving the discretized algebraic 
+transport equations. The zero-search-cost smart equilibrium calculation is the costs of on-demand 
+learning algorithm excluding the costs for NN search.}
 \end{figure}
 
-Figure~\ref{fig:computational-cost} compares the computational cost
-at each time step of: \emph{(i)} conventional chemical equilibrium
-calculations, \emph{(ii)} smart chemical equilibrium calculations,
-and \emph{(iii)} transport calculations. These costs are measured
-as CPU time in microseconds. For the equilibrium calculations, conventional
-and smart, we show CPU time needed to calculate all equilibrium states
-across all mesh cells within the same time step. For the transport
-calculations, the cost is the time needed to solve the algebraic transport
-equations (e.g., solving tridiagonal linear systems by the direct Thomas algorithm). Figure~\ref{fig:computational-cost}
-confirms that the cost of conventional chemical equilibrium calculations
-can be orders of magnitude higher than the cost of transport calculations
-(five orders of magnitude higher in this relatively simple reactive
-transport example). The figure also shows that the computational cost associated
-with chemical equilibrium calculations is drastically reduced using
-the smart equilibrium algorithm (by about three orders of magnitude
-when smart predictions are made in all mesh cells during a time step).
-We note that during the first time steps of the reactive transport simulation,
-the CPU time spent on the smart equilibrium algorithm has relatively high spikes
-in comparison to that after 4000~time steps. We observe, for most of
-those spikes, that the need of on-demand learning existed only in 1~to 2~cells (out of
-100). After about half of the simulation time, the orange curve exhibits
-only few peaks, which correspond to only occasional learning acts,
-demanded by the acceptance test of the algorithm.
+%---------------------------------------------------------------------------------------------------%
+Figure~\ref{fig:computational-cost} compares the computational cost at each time step of: 
+\emph{(i)} conventional chemical equilibrium calculations, 
+\emph{(ii)} smart chemical equilibrium calculations (or zero-cost-search smart equilibrium 
+calculations), and \emph{(iii)} transport calculations. 
+%
+These costs are measured as CPU time in microseconds. For the equilibrium calculations, conventional
+and smart, we show CPU time needed to calculate all equilibrium states across all mesh cells within 
+the same time step. For the transport calculations, the cost is the time needed to solve the 
+algebraic transport equations (we use direct Thomas algorithm for tridiagonal linear systems). 
+As the name suggests, zero-cost-search smart equilibrium calculations are the costs of 
+on-demand learning algorithm per each time RT step excluding the costs for NN search.
+%---------------------------------------------------------------------------------------------------%
+Figure~\ref{fig:computational-cost} confirms that the cost of conventional chemical equilibrium 
+calculations can be orders of magnitude higher than the cost of transport calculations (about five 
+orders of magnitude higher in this relatively simple reactive transport example). The figure also shows 
+that the computational cost associated with chemical equilibrium calculations is drastically reduced 
+using the smart equilibrium algorithm (by about three orders of magnitude when smart predictions are 
+made in all mesh cells during a time step). We note that during the first time steps of the RT 
+simulation, the CPU time spent on the smart equilibrium algorithm has relatively high spikes
+in comparison to that after 4000~time steps. We observe, for most of those spikes, that the need of 
+on-demand learning existed only in 1~to 2~cells (out of 100). After about half of the simulation time, 
+the orange curve exhibits only few peaks, which correspond to only occasional learning acts, demanded 
+by the acceptance test of the algorithm. The red line, corresponding to the zero-cost-search smart 
+equilibrium calculations, indicates potential improvement in the CPU time of the on-demand learning 
+algorithm once the costs of the reference point retrieval will be improved. Below, we consider 
+several strategies to address the performance of look-up operations for already evaluated chemical 
+states.
 
-\subsection{Nearest Neighbor Search Analysis\label{subsec:Nearest-Neighbor-Search-Analysis}}
+\subsubsection{Nearest Neighbor Search Analysis\label{subsec:Nearest-Neighbor-Search-Analysis-Equilibrium}}
 
-As mentioned, estimating an equilibrium state in a smart chemical equilibrium
-calculation requires a NN search operation. This search
-is performed among all currently recorded fully solved chemical equilibrium
-problems, during the ongoing reactive transport simulation. It is
-needed to find the previously solved equilibrium problem whose input
-conditions are the closest (in the sense of Euclidean norm) to the
-input conditions of the new problem. Thus, the computing cost of the
-search operation increases as we perform more on-demand learning calculations
-because, at the end of each of them, a newly learned equilibrium
-state is stored.
+%---------------------------------------------------------------------------------------------------%
+As mentioned above, estimating an equilibrium state in a smart chemical equilibrium calculation 
+requires a retrieval operation for the reference chemical state, which can be used in Taylor expansion. 
+Currently, this search is performed among all currently recorded fully solved chemical equilibrium
+problems, during the ongoing reactive transport simulation. It is needed to find the previously 
+solved equilibrium problem whose input conditions are the closest (in the sense of Euclidean norm) 
+to the input conditions of the new problem. Thus, the computing cost of the search operation 
+increases as we perform more on-demand learning calculations because, at the end of each of them, 
+a newly learned equilibrium state is stored.
 
 \begin{figure}
 \begin{centering}
 \includegraphics[width=0.7\textwidth]{figures/equilibrium/search-traylor-vs-total-learnings}
 \par\end{centering}
-\caption{\label{fig:search-traylor-vs-total-learnings}The computing time for
-the NN search operations, as more fully solved equilibrium
-problems are stored during the simulation. A comparison is made against
-the computing time required for the first-order Taylor expansion
-calculation, which is a small and fast matrix-vector multiplication
-with more or less constant cost throughout.}
+\caption{\label{fig:search-traylor-vs-total-learnings}
+%
+The computing time for the total estimation, NN search operations, as more fully solved equilibrium 
+problems are stored during the simulation. A comparison is made against the computing time required 
+for the first-order Taylor expansion calculation, which is a small and fast matrix-vector 
+multiplication with more or less constant cost throughout. }
 \end{figure}
 
-Figure~\ref{fig:search-traylor-vs-total-learnings} demonstrates
-this increase in search cost as more learned equilibrium problems
-are recorded during the reactive transport simulation. It is also compared to the cost of performing a first-order Taylor expansion
-calculation (a small and fast matrix-vector multiplication), which
-exhibits rather constant computing costs. This increase in search time
-eventually ceases, because the smart algorithm has already learned
-enough key chemical equilibrium problems to quickly estimate most
-(in some cases all) subsequent ones. However, should the problem contain
-more geologic and/or chemical complexity, this cost
-could continue to increase. This most certainly implies the importance
-of the use of the data structure (such as kd-tree) that would allow to maintain the costs of NN search algorithm constant and amenable.
-In order to further improve search times, previously stored learned problems could also be ranked, so that those that
-have not had much use for quickly predicting new states are purged
-from the database eventually. In this way, the cost of the search would be optimized to remain
-negligible compared to other costs in the simulation.
+%---------------------------------------------------------------------------------------------------%
+Figure~\ref{fig:search-traylor-vs-total-learnings} demonstrates this increase in search cost as more 
+learned equilibrium problems are recorded during the reactive transport simulation (orange line). 
+This time impacts directly to the general costs of the estimation step (green line). They are both 
+compared to the cost of performing a first-order Taylor expansion calculation (a small and fast 
+matrix-vector multiplication), which exhibits rather constant computing costs. This increase in 
+search time eventually ceases and becomes constant, because the smart algorithm has already learned 
+enough key chemical equilibrium problems to quickly estimate most (in some cases all) subsequent 
+ones. 
+%
+However, should the problem contain more geologic and/or chemical complexity, this cost could 
+continue to increase. This most certainly implies the importance of the use of the data structure 
+(such as kd-tree or locally sensitive hashing tables) that would allow to maintain the costs of 
+retrieval algorithm constant and amenable. 
+%
+In order to further improve search times, previously stored learned problems could also be ranked, 
+so that those that have not had much use for quickly predicting new states are purged from the 
+database eventually. The chemical state most often used for smart prediction will have higher rank
+that can define their order during the retrieval step. As soon as such reference state provides as 
+an accurate enough prediction, the search can be terminated and its costs would be optimized 
+to remain negligible (compared to other costs in the simulation).
 
+%---------------------------------------------------------------------------------------------------%
 \begin{figure}
 \begin{centering}
 \includegraphics[width=0.7\textwidth]{figures/equilibrium/speedups}
 \par\end{centering}
-\caption{\label{fig:speedup-with-and-without-search-costs}The speedup factor of chemical
-equilibrium calculations, at each time step of the simulation, resulting
-from the use of the on-demand learning acceleration strategy, employing a linear NN search (orange).
-A comparison is made with the speedup obtained by removing the computing
-time needed for the linear NN search (blue). The latter indicates
-an upper bound for the speedup upon improvement of the search algorithm.}
+\caption{\label{fig:speedup-with-and-without-search-costs}
+The speedup factor of chemical equilibrium calculations, at each time step of the simulation, 
+resulting from the use of the on-demand learning acceleration strategy, employing a linear NN search 
+(orange). A comparison is made with the speedup obtained by removing the computing time needed for 
+the retrieval of the reference state (blue). The latter indicates an upper bound for the speedup 
+upon improvement of the search algorithm.}
+\end{figure}
+
+%---------------------------------------------------------------------------------------------------%
+Let us consider the speedup at each time step of the reactive transport simulation, which is 
+calculated as the ratio of the accumulated time needed for the conventional to the smart chemical 
+equilibrium calculations across all cells in the mesh. It is depicted in Figure 
+\ref{fig:search-traylor-vs-total-learnings} with an orange line. 
+%
+Considering a \emph{hypothetical ideal NN search algorithm}, whose computing cost is zero, we have 
+shown that the search operations contribute most to the computation cost of the smart chemical 
+equilibrium method. This is the case, as the Taylor extrapolation calculation is fast (see Figure 
+\ref{fig:search-traylor-vs-total-learnings} discussed above). By excluding the costs of the NN 
+search (which we also refer to as ideal or zero-cost NN search algorithm) should yield an 
+approximation of the upper bound of the speedup we expect to obtain (see blue line in Figure~\ref{fig:speedup-with-and-without-search-costs}). The speedup of our current implementation 
+of the smart chemical equilibrium algorithm stabilizes at a value close to 200, whereas the ideal 
+speedup is about 400. Thus, further research and improvements in this regard are needed further 
+acceleration of the algorithm. 
+
+\subsection{Smart chemical kinetics algorithm with the HKF activity model \label{subsec:part-2}}
+
+
+Next, let us consider the performance of the smart chemical kinetics algorithm.
+%---------------------------------------------------------------------------------------------------%
+The on-demand learning for chemical equilibrium algorithm, discussed in the details in Subsection 
+\ref{subsec:part-1}, is heavily used in the simulations of kinetically controlled species. 
+We clarify the steps of the ODML algorithm for chemical kinetics below for each RT step 
+$[t_k, t_{k+1}], k = 1, \ldots {\rm K}$:
+%
+\begin{itemize} 
+\setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
+\item Transport generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells.
+\item For each cell: 
+\begin{itemize}
+\setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
+\item Evolve kinetics species $n_k$ by smart kinetics algorithm (see Figure \ref{fig:kinetics-algorithm}) 
+using either {on-demand learning / training / full system of ODEs integration} (which corresponds to 
+empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles {\large $\newmoon$}).
+\item Update equilibrium species $n_e$.
+\end{itemize}
+%
+\item Combine the species amounts $n = [n_k; n_e]$.
+\end{itemize}
+
+\begin{figure}
+\begin{centering}
+\includegraphics[width=0.7\textwidth]{figures/kinetics/algorithm.png}
+\par\end{centering}
+\caption{\label{fig:kinetics-algorithm}. 
+The ODML algorithm for chemical kinetics on the reactive step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$.}
 \end{figure}
 
 
-Considering a \emph{hypothetical ideal NN search algorithm}
-whose computing cost is zero, we have shown that the search operations
-contribute most to the computation cost of the smart chemical equilibrium method. This is the case, as the Taylor extrapolation calculation is fast. By excluding the costs of the NN search (which we also refer to as ideal or zero-cost NN search algorithm) should yield an approximation
-of the upper bound of the speedup we expect to  obtain. This is shown
-in Figure~\ref{fig:speedup-with-and-without-search-costs}, where
-the speedup\footnote{The speedup at each time step of the reactive transport simulation
-is calculated as the ratio of the accumulated time needed for the
-conventional to the smart chemical equilibrium calculations across all
-cells in the mesh.} of our current implementation of the smart chemical equilibrium algorithm
-stabilizes at a value close to 200, whereas the ideal speedup is about
-400. Thus, further research and improvements in this regard are needed
-further acceleration of the algorithm. 
+%---------------------------------------------------------------------------------------------------%
+In the chemical model part, the activity coefficients of the aqueous species are calculated using
+the HKF model extended Debye-H\"uckel model \citep{Helgeson1974a, Helgeson1974, Helgeson1976, 
+Helgeson1981} for solvent water and ionic species, except for the aqueous 
+species CO$_{2}$(aq), for which the \citet{drummond1981boiling} model is applied. The rest of chemical
+properties coincides with assumptions of Subsection \ref{subsec:part-1}. We assume dissolution kinetics 
+calcite, whereas dolomite is precipitating in equilibrium (using local equilibrium assumption 
+is employed). The considered reaction of calcite dissolution is 
+%
+$$\mbox{CaCO}_3(s) + {\rm H}^{+} \rightleftharpoons \mbox{Ca}^{2+} + \mbox{HCO}_3^{-}.$$
+%
+Rates of minerals' dissolution can be represented by the following function for the $m$th mineral
+%
+$$r_{m}(T,P,n):= \mathcal{A}_{m}(n)\sum^{\rm reactions}_{i} \mathcal{M}_{m,i}(T,P,n), 
+\quad r_{m}:\mathbb{R}^{2+N} \rightarrow \ensuremath{\mathbb{R}},$$ where 
+%
+$\mathcal{A}_{m} := n_{m} \, \sigma_{m}$ is a \emph{surface area function} \big[$\mathrm{m^2}$\big] 
+with \emph{current molar amount} of the mineral $n_{m}$ \big[$\mathrm{mol}$\big] 
+and  \emph{current specific reactive surface area} $\sigma_{m}$ \big[$\mathrm{{m^2}/{mol}}$\big]. 
+%
+Here, 
+$$\mathcal{M}_{m,i} 
+:= k_{m,i} \, {\rm sgn}(1-\Omega) \, |1-\Omega^{p_{i}}|^{q_{i}} 
+\,\prod_{j} a_{j}^{\xi_{j}} \prod_{g} P_{g}^{\eta_{g}}$$
+%
+is the \emph{$i$-th kinetic mechanism function} \big[$\tfrac{mol}{m^2 s}$\big], where 
+$\Omega := {1}/{K_{m}}\prod_{i=1}^{N} \, a_{i}^{\nu_{i}}$ is current \emph{saturation index} 
+defined via product of activities with power of \emph{stoichiometric coefficient} $\nu_{i}$ of 
+the $i$-th ionic species and \emph{equilibrium constant} $K_{m}$. 
+%
+The $i$-th \emph{rate constant} (Arrhenius eq.) $k_{m,i}$ is defined as 
+%
+$$k_{m,i} := k_{m,i}^{\circ} \exp \Big[-\tfrac{E_{m,i}}{R}(\tfrac{1}{T}-\tfrac{1}{298.15})\Big],$$ 
+%
+where $k_{m,i}^{\circ}$ is the \emph{reaction rate} constant at 25$^\circ$ 
+and $E_{m,i}$ is the \emph{activation energy}, and the \emph{universal gas} constant $R$. 
+The latter parameters for Calcite are taken from \cite{Palandri2004}, i.e., 
+%
+for acidic mechanism, 
+$\log k_{i}^{\circ} = -5.81 \mathrm{{mol}/{m^2\,s}}$, \;$E_i$ = 23.5 $\mathrm{{kJ}/{mol^4}}$, and 
+for neutral mechanism, 
+$\log k_{i}^{\circ} = -0.30 \mathrm{{mol}/{m^2\,s}}$, \;$E_i$ = 14.4 $\mathrm{{kJ}/{mol^4}}$, 
+$a[H^+]$ = 1.0.
+The specific surface area of calcite is set to be 5000~${\rm {cm^2}/{g}}$. 
 
-\subsection{HKF activity model. Example with chemical kinetics.  \label{subsec:part-2}}
-{\color{blue}{UPDATE:
 
-To study acceleration of the chemical kinetics, we consider Calcite as kinetics 
-species. SA = 5000. 
+\subsubsection{Smart Prediction Analysis
+\label{subsec:Performance-and-Accuracy-Kinetics}}
 
+%---------------------------------------------------------------------------------------------------%
+%
 \begin{figure}
 \begin{centering}
 \begin{minipage}[t]{0.5\columnwidth}%
@@ -1097,24 +1227,19 @@ species. SA = 5000.
 \par\end{center}%
 \end{minipage}
 \par\end{centering}
-\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{{\rm vol}}$)
-of minerals calcite and dolomite along the rock core as well as the
-concentrations of selected aqueous species (in molal) at three different
-times: 30 minutes, 5 hours, and 50 days (after 1, 10, and 2400 time
-steps of 30 minutes each, respectively). The \emph{solid curves} correspond
-to results of the reactive transport simulation using conventional
-chemical equilibrium calculations based on the Gibbs energy minimization.
-The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
-correspond to the results using smart chemical equilibrium calculations.
-\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
-fast and accurate smart equilibrium prediction at that point, whereas
-the \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells
-where \emph{on-demand learning} was needed.}
+\caption{\label{fig:calcite-dolomite-kinetics}
+The volume percent ($\%_{{\rm vol}}$) of minerals calcite and dolomite along the rock core as well as 
+the concentrations of selected aqueous species (in molal) at three different times: 30 minutes, 
+5 hours, and 120 days, 2 hours (after 1, 10, and 5800 time steps of 30 minutes each, respectively). 
+The \emph{solid curves} correspond to results of the reactive transport simulation using conventional
+chemical kinetics calculations based on the integration of the system of ODEs for kinetically 
+controlled species and update of the equilibrium species by the Gibbs energy minimization.
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$ correspond to the results using smart 
+chemical kinetics calculations. \emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
+fast and accurate smart kinetics prediction at that point, whereas the \emph{empty circles} 
+${\rm (}\circ{\rm )}$ depict the cells where \emph{on-demand learning} was needed.}
 \end{figure}
-
-
-\subsubsection{Smart Prediction Analysis
-\label{subsec:Performance-and-Accuracy-Kinetics}}
+%---------------------------------------------------------------------------------------------------%
 
 Figure~\ref{fig:calcite-dolomite-kinetics} 
 shows the volume of minerals calcite,
@@ -1319,8 +1444,6 @@ cells in the mesh.} of our current implementation of the smart chemical equilibr
 stabilizes at a value close to 200, whereas the ideal speedup is about
 400. Thus, further research and improvement in this regard is needed
 for even higher efficiency. 
-}
-}
 
 
 {\color{green}{UPDATE:
@@ -1518,7 +1641,7 @@ an upper-bound for the speedup as our search algorithm is improved.}
 \end{figure}
 
 
-\subsection{Nearest Neighbor Search Analysis\label{subsec:Nearest-Neighbor-Search-Analysis-Kinetics}}
+\subsection{Nearest Neighbor Search Analysis\label{subsec:Nearest-Neighbor-Search-Analysis-Kinetics-Sa-50}}
 
 Recall that estimating an equilibrium state in a smart chemical equilibrium
 calculation requires a nearest neighbor search operation. This search
@@ -1586,6 +1709,12 @@ ROCK
 Firedrake for solving the partial differential equations (advection, diffusion, Darcy equation, etc.)
 
 
+%---------------------------------------------------------------------------------------------------%
+Our intention in this proof-of-concept paper is to demonstrate the potential of the on-demand 
+learning algorithm, which will be followed by more advanced demonstrations in future work
+(e.g., more heterogeneous media, three-dimensional meshes, etc.).
+
+
 \begin{figure}
 \begin{centering}
 \includegraphics[width=0.7\textwidth]{figures/rock/minerals.png}
@@ -1607,40 +1736,35 @@ Porosity changes as rock minerals react with the acidic aqueous fluid injected o
 \begin{centering}
 \begin{minipage}[t]{0.5\columnwidth}%
 \begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-10}
+\includegraphics[width=1\textwidth]{figures/rock/ca-ion.png}
 \par\end{center}
 \begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-1000}
+\includegraphics[width=1\textwidth]{figures/rock/magnesium-ion.png}
 \par\end{center}
-\begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/calcite-dolomite-2400}
-\par\end{center}%
 \end{minipage}%
 \begin{minipage}[t]{0.5\columnwidth}%
 \begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-10}
+\includegraphics[width=1\textwidth]{figures/rock/hco3-ion.png}
 \par\end{center}
 \begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-1000}
+\includegraphics[width=1\textwidth]{figures/rock/co2-aq.png}
 \par\end{center}
-\begin{center}
-\includegraphics[width=1\textwidth]{figures/kinetics-sa-50/aqueous-species-2400}
-\par\end{center}%
 \end{minipage}
 \par\end{centering}
-\caption{\label{fig:calcite-dolomite-kinetics}The volume percent ($\%_{{\rm vol}}$)
-of minerals calcite and dolomite along the rock core as well as the
-concentrations of selected aqueous species (in molal) at three different
-times: 30 minutes, 5 hours, and 50 days (after 1, 10, and 2400 time
-steps of 30 minutes each, respectively). The \emph{solid curves} correspond
-to results of the reactive transport simulation using conventional
-chemical equilibrium calculations based on the Gibbs energy minimization.
-The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$
-correspond to the results using smart chemical equilibrium calculations.
-\emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
-fast and accurate smart equilibrium prediction at that point, whereas
-the \emph{empty circles} ${\rm (}\circ{\rm )}$ depict the cells
-where \emph{on-demand learning} was needed.}
+\caption{\label{fig:rock-aqueous-species} }
+\end{figure}
+
+\begin{figure}[!t]
+	\centering
+	\subfloat[]{
+	\includegraphics[height=6cm]{figures/rock/permiability.png}
+	\label{fig:rock-permiability}}
+	\quad
+	\subfloat[]{
+	\includegraphics[height=6cm]{figures/rock/darcy-velocity.png}
+	\label{fig:similar-equilibrium}}
+	\caption{.}
+	\label{fig:rock-darcy-velocity}
 \end{figure}
 
 
