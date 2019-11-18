@@ -22,6 +22,7 @@
  breaklinks=false,pdfborder={0 0 0},pdfborderstyle={},backref=false,colorlinks=false]
  {hyperref}
 \usepackage{xcolor} % for using color in the text
+\usepackage{wasysym} % for fullmoon, newmoon symbols
 
 
 \makeatletter
@@ -43,3 +44,8 @@
 \newcommand\wlength{2.5em}
 \newcommand\w[1]{\makebox[\wlength]{$#1$}}
 \newcommand\minus[1]{\mathllap{-}#1}
+
+
+\usepackage{caption}
+\captionsetup{labelfont=bf,font={small}}
+\captionsetup{belowskip=-12pt}
