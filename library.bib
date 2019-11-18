@@ -814,7 +814,7 @@ url = {http://linkinghub.elsevier.com/retrieve/pii/S1474706513000041},
 volume = {64},
 year = {2013}
 }
-@article{Zeleznik1960,
+@techreport{Zeleznik1960,
 author = {Zeleznik, F J and Gordon, S},
 institution = {NASA},
 number = {NASA-TN-D-473},
@@ -1147,6 +1147,7 @@ doi = {NASA RP-1311},
 file = {:home/allan/Documents/Mendeley Desktop/McBride, Gordon - 1994 - Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications I. Analysis.pdf:pdf},
 isbn = {RP-1311},
 pages = {55},
+institution={NASA},
 title = {{Computer Program for Calculation of Complex Chemical Equilibrium Compositions and Applications: I. Analysis}},
 year = {1994}
 }
@@ -1190,6 +1191,14 @@ file = {:home/allan/Documents/Mendeley Desktop/Schoenberg, Systems, Valley - 200
 title = {{Optimization with the Quasi-Newton Method}},
 year = {2001}
 }
+
+@misc{autodiff,
+    author = {Leal, Allan M. M. and others},
+    title = {autodiff, a modern, fast and expressive {C++} library for automatic differentiation},
+    howpublished = {\texttt{https://autodiff.github.io}},
+    year = {2018}
+}
+
 @unpublished{Leal2017c,
 author = {Leal, Allan M.M. and Kulik, Dmitrii A. and Saar, Martin O.},
 title = {{Ultra-Fast Reactive Transport Simulations When Chemical Reactions Meet Machine Learning: Chemical Kinetics}},
@@ -9762,36 +9771,4 @@ title = {{Quadrature-free non-oscillatory finite volume schemes on unstructured 
 url = {http://linkinghub.elsevier.com/retrieve/pii/S0021999107001520},
 volume = {226},
 year = {2007}
-}
-
-@article{Leal2015,
-abstract = {A chemical kinetics algorithm is presented for geochemical applications. The algorithm is capable of handling both equilibrium- and kinetically-controlled reactions in multiphase systems. The ordinary differential equations (ODEs) are solved using an implicit multistep backward differentiation formula (BDF) algorithm to ensure efficiency and stability when integrating stiff ODEs. An adaptive control scheme of the time step is adopted to guarantee small steps in steeper regions and large steps in smoother regions of the integration. Analytical derivatives of the reaction rates and species activities are used to permit the use of larger time steps, and to increase the robustness of the calculations. The chemical equilibrium calculations are performed using a Gibbs free energy minimisation algorithm, which is based on a trust-region interior-point method adapted with a watchdog strategy that yields quadratic rates of convergence near the solution. The chemical kinetics algorithm is applied to geochemical problems relevant to carbon storage in saline aquifers. The calculations assume aqueous, gaseous and mineral phases, where the kinetics of the water-gas-rock interactions are investigated. The results allow us to estimate the time frames at which brine of different salinities and supercritical CO2 attains equilibrium with a carbonate rock, as well as the amount of carbon dioxide trapped by solubility and mineralisation mechanisms.},
-author = {Leal, Allan M.M. and Blunt, Martin J. and LaForce, Tara C.},
-doi = {10.1016/j.apgeochem.2014.09.020},
-file = {:home/svetlana/Dropbox/eth/allan-materials/papers/A chemical kinetics algorithm for geochemical modelling Leal Blunt Tara LaForce.pdf:pdf},
-issn = {18729134},
-journal = {Applied Geochemistry},
-pages = {46--61},
-publisher = {Elsevier Ltd},
-title = {{A chemical kinetics algorithm for geochemical modelling}},
-url = {http://dx.doi.org/10.1016/j.apgeochem.2014.09.020},
-volume = {55},
-year = {2015}
-}
-
-@article{Rathgeber2016,
-abstract = {Firedrake is a new tool for automating the numerical solution of partial differential equations. Firedrake adopts the domain-specific language for the finite element method of the FEniCS project, but with a pure Python runtime-only implementation centered on the composition of several existing and new abstractions for particular aspects of scientific computing. The result is a more complete separation of concerns that eases the incorporation of separate contributions from computer scientists, numerical analysts, and application specialists. These contributions may add functionality or improve performance. Firedrake benefits from automatically applying new optimizations. This includes factorizing mixed function spaces, transforming and vectorizing inner loops, and intrinsically supporting block matrix operations. Importantly, Firedrake presents a simple public API for escaping the UFL abstraction. This allows users to implement common operations that fall outside of pure variational formulations, such as flux limiters.},
-archivePrefix = {arXiv},
-arxivId = {1501.01809},
-author = {Rathgeber, Florian and Ham, David A. and Mitchell, Lawrence and Lange, Michael and Luporini, Fabio and McRae, Andrew T.T. and Bercea, Gheorghe Teodor and Markall, Graham R. and Kelly, Paul H.J.},
-doi = {10.1145/2998441},
-eprint = {1501.01809},
-file = {:home/svetlana/Dropbox/matcules@ethz.ch/mendeley/Firedrake.pdf:pdf},
-issn = {15577295},
-journal = {ACM Transactions on Mathematical Software},
-keywords = {Abstraction,Code generation,UFL},
-number = {3},
-title = {{Firedrake: Automating the finite element method by composing abstractions}},
-volume = {43},
-year = {2016}
 }
