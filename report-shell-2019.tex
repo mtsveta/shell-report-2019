@@ -62,9 +62,9 @@ main future tasks and steps of further investigation.
 %---------------------------------------------------------------------------------------------------%
 \begin{enumerate}\setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
 \item The on-demand learning machine algorithm (ODML) was tested on the one-dimensional reactive 
-transport problem, where chemistry is controlled by local equilibrium and Pitzer activity model is 
-considered as activity model for the aqueous species. After extensive tests of such chemical system 
-with 36~species in 4~phases, the following results has been obtained:
+transport problem, where chemistry is controlled by local equilibrium and Pitzer activity model for 
+the aqueous species. After extensive tests of such chemical system with 36~species in 4~phases, 
+the following results have been obtained:
 %
 %---------------------------------------------------------------------------------------------------%
 \begin{itemize}
@@ -78,7 +78,7 @@ Gibbs energy minimization (GEM) problem), the rest {\bf 99.97} \% of the cells a
 a quick and accurate way.
 %
 \item The relative error of the approximations provided by the smart approach (in comparison to 
-the conventional approach) is less that 1\% in mineral's \sveta{phase-volumes} and less that 16\% 
+the conventional approach) is less than 1\% in mineral's \sveta{phase-volumes} and less than 16\% 
 in the aqueous species.  
 %
 \item Main results, obtained by testing the algorithm on the above-described benchmark, are 
@@ -92,7 +92,7 @@ kinetically has provided the following results:
 %
 \begin{itemize} 
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item Application of the smart chemical kinetics algorithm alone provides speedup of {\bf 8-10x}
+\item Application of the smart chemical kinetics algorithm alone provides a speedup of {\bf 8-10x}
 %
 \item Application of the smart chemical kinetics algorithm together with smart equilibrium provides 
 speedup of {\bf 30x} and {\bf 100x} (in the worst and best case, respectively).
@@ -113,7 +113,7 @@ as well as further testing and improvement of the ODML algorithm on more challen
 {\bf Future tasks}
 %
 \begin{enumerate} \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item Improvement of the acceptance criterion in the ODML algorithm (providing less learnings 
+\item Improvement of the acceptance criterion in the ODML algorithm (providing fewer learnings 
 together with high accuracy).
 %
 \item Improvement of the time for the reference element retrieval/search/lookup with 
@@ -126,9 +126,9 @@ together with high accuracy).
 \end{itemize}
 %---------------------------------------------------------------------------------------------------%
 %
-\item Including smart chemical equilibrium algorithm into the RHS evaluation of the system of ODEs 
-governing kinetically controlled species, which can cause up to hundreds of chemical equilibrium 
-calculations.
+\item Including smart chemical equilibrium algorithm into the right-hand (RHS) evaluation of 
+the system of ODEs governing kinetically controlled species, which can cause up to hundreds of 
+chemical equilibrium calculations.
 %
 \item Extension of the smart approach to the evaluation of the chemical properties that might 
 improve performance of the reactive transport simulations, generally.
@@ -1250,6 +1250,22 @@ empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles
 The ODML algorithm for chemical kinetics on the reactive step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$.}
 \end{figure}
 
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwResult{species amounts $n$ on the reactive transport step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$}
+ initialization\;
+ transport generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells\;
+ \For{each cell}{
+  Evolve kinetics species $n_k$ by smart kinetics algorithm (see Figure \ref{fig:kinetics-algorithm}) 
+using either {on-demand learning / training / full system of ODEs integration} (which corresponds to 
+empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles {\large $\newmoon$})\;
+  Update equilibrium species $n_e$\;
+  Combine the species amounts $n = [n_k; n_e]$\;
+ }
+ \caption{The ODML algorithm for chemical kinetics below for each RT step.}
+\end{algorithm}
+
+
 \begin{comment}
 
 \begin{algorithm}[!t]
@@ -1257,7 +1273,7 @@ The ODML algorithm for chemical kinetics on the reactive step $[t_k, t_{k+1}], k
 \small
 \STATE {{\bf Input:}}
 $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$ \COMMENT{reactive transport time step} \\[4pt]
-\qquad \quad \, $b_j$, $j = 1, ..., {\rm J}$ \COMMENT{amounts of elemnts} \\[4pt]
+\qquad \quad \, $b_j$, $j = 1, ..., {\rm J}$ \COMMENT{amounts of elements} \\[4pt]
 % 
 \STATE {{\bf TRANSPORT}}: \\[4pt]
 \begin{itemize}
@@ -1405,14 +1421,14 @@ kinetic paths, which can be observed from Figure~\ref{fig:calcite-dolomite-kinet
 or 20 hours of reactive transport simulations. The number of empty circles ${\rm (}\circ{\rm )}$ 
 reaches up to 10~cells out of total 100. However, the algorithm is still able to accurately estimate 
 the rest of the discretization points on the rock (see the solid circles $\bullet$). Analogous to 
-results from Subsection \eqref{subsec:part-1}, the most learnings are needed as the perturbation 
+results from Subsection \eqref{subsec:part-1}, the majority of the learnings are needed as the perturbation 
 front moves down the rock core. Having said that, eventually the OMDL has learnt enough distinct 
 chemical kinetic problems (most of them near the inlet face) which could be successfully used for 
 quick and accurate estimates for the rest of the cells downstream. 
 
 Note, that even though the smart prediction can be not accurate enough in some cells for the kinetic 
 species, the ODML can still successfully predict the remaining equilibrium species. This is reflected 
-in the total numbers of the of the learnings needed for kinetics and equilibrium species. For the 
+in the total numbers of the learnings needed for kinetics and equilibrium species. For the 
 first ones, total 1808 (or 0.18\%) of 1`000`000 learnings were triggered by violating inequality 
 \eqref{eq:acceptance-test-rates}. Update of equilibrium species, in turn, required 989 (0.10\%) 
 full GEM simulations, allowing 99.90\% of the discretization cells to be predicted in a quick way.
@@ -1510,7 +1526,8 @@ conventional approach by at least one order of magnitude (see
 Figure~\ref{fig:computational-cost-kinetics-2}). Since chemical kinetics is way more complex chemical 
 process, it requires higher computational costs in comparison to pure equilibrium (see Figure \ref{fig:computational-cost-kinetics-2}). We also note that during the first time steps of the RT 
 simulation, the CPU time spent on the smart kinetic algorithm has much higher spikes in comparison 
-to the curves in Figure \ref{fig:computational-cost-kinetics-2}. These spikes correspond to learnings happening 
+to the curves in Figure \ref{fig:computational-cost-kinetics-2}. These spikes correspond to the 
+learnings happening 
 for both kinetics and equilibrium species. After about half of the simulation time, 
 they are much smaller and much more seldom (resulting from occasional learning acts, demanded 
 by the acceptance test of the ODML algorithm). The red line, corresponding to the zero-cost-search 
