@@ -548,7 +548,9 @@ system}, we refer to Appendix~\ref{subsec:Chemical-kinetics-equations} or previo
 
 %---------------------------------------------------------------------------------------------------%
 Assume that a chemical equilibrium calculation has been performed previously with input conditions
-$(T^{\star},P^{\star},b^{\star})$, and a new one needs to be performed with $(T,P,b)$ instead. 
+$(T^{\star},P^{\star},b^{\star}) = (T,P,b)^\star$, and a new one needs to be performed with 
+$(T,P,b)$ instead. 
+%
 Rather than computing $n_e=\varphi(T,P,b_e)$, using the computationally expensive equilibrium 
 function $\varphi$ (cf. \ref{eq:equilibrium-func}), we first try estimating $\bar{n}_e$ with a 
 \emph{first-order Taylor approximation}:
@@ -591,7 +593,7 @@ condition $n^\circ_k$, the kinetic species can be approximated as follows:
 \begin{equation}
 \bar{n}_k 
 = n^\star_k + \delta n_k
-= n^\star_k + \Big(\tfrac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
+= n^\star_k + \Big(\frac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
 \big(n^\circ_k - (n^\circ_k)^\star \big)
 \label{eq:smart-estimate-kinetics}
 \end{equation}
@@ -648,9 +650,9 @@ matrix.
 Let 
 %
 \begin{equation}
-\mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{{\rm I}} 
+\mathcal{I}_e =\left\{ (T,P,b_e)^{\,i}\right\}_{i=1}^{{\rm I}} 
 \qquad \mbox{and} \qquad 
-\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{{\rm J}}
+\mathcal{I}_k =\left\{ (n^{\circ}_k)^{\,j} \right\}_{j=1}^{{\rm J}}
 \end{equation}
 %
 represent the sets of input conditions for the chemical equilibrium and kinetics problems, 
@@ -678,16 +680,15 @@ whereas $d^{j}_k$ measures the distance between the initial condition of $j$th f
 problem and the initial condition of new one.
 }
 
-\textbf{Note:} Other norms can be used to define the distance measure
-above and other search operations can be equally considered (not necessarily
-based on the nearest neighbor, which can be prone to the curse of dimensionality
-as the number of considered elements E increases). We are currently
-investigating alternative search schemes and have already identified some
-with more promising results. These findings will be the subject of
-a subsequent communication. However, for the specific reactive transport
-modeling problem we consider in this proof-of-concept work (described
-in Section~\ref{sec:Results}), we obtain satisfactory overall performance
-results with the nearest neighbor search scheme described before.
+%---------------------------------------------------------------------------------------------------%
+\textbf{Note:} Other norms can be used to define the distance measure above and other search 
+operations can be equally considered (not necessarily based on the nearest neighbor, which can be 
+prone to the curse of dimensionality as the number of considered elements E increases). We are 
+currently investigating alternative search schemes and have already identified some with more 
+promising results. These findings will be the subject of a subsequent investigation steps. However, 
+for the specific reactive transport modeling problem we consider in this proof-of-concept work 
+(described in Section~\ref{sec:Results}), we obtain satisfactory overall performance results with 
+the nearest neighbor search scheme described before.
 
 %---------------------------------------------------------------------------------------------------%
 For the first-order Taylor expansion presented in Eq.~(\ref{eq:smart-estimate}) or 
@@ -730,7 +731,7 @@ This could be done naively by checking how much the species amounts have changed
 another, using the following test condition for all species:
 %
 \begin{equation}
-|\bar{n}_{i}-n_{i}^{\star}| \leq \epsilon_{\rm rel} |n_{i}^{\star}| + \epsilon_{{\rm abs}} 
+|\bar{n}_{e, i}-n_{e, i}^{\star}| \leq \epsilon_{\rm rel} |n_{e, i}^{\star}| + \epsilon_{{\rm abs}} 
 \qquad(i=1,\ldots,{\rm N}_e).
 \label{eq:eq:acceptance-test-n}
 \end{equation}
@@ -744,7 +745,7 @@ The major drawback of the tolerance test in Eq.~(\ref{eq:eq:acceptance-test-n}) 
 reflect the thermodynamic \emph{behavior of stable species and phases}. Consider, for instance, a 
 chemical system with two stable phases: an aqueous solution saturated with respect to a pure mineral 
 phase. Adding more of that mineral composition to the system will not alter the composition of the
-fluid, but just increase the current solid phase amount. Under such conditions, the acceptance test, 
+fluid, but just increase the current solid-phase amount. Under such conditions, the acceptance test, 
 based on species amounts, would fail even though the estimated chemical equilibrium state, using 
 first-order sensitivity derivatives, would be exact. This happens, because  the amount of the mineral 
 increases linearly, while the amount of each aqueous species remains constant.
@@ -786,8 +787,8 @@ equilibrium constants of reactions), a similar but \emph{not equivalent}, test e
 of activities:
 %
 \begin{equation}
-|\ln\bar{a}_{i}-\ln a_{i}^{\star}| 
-\leq \epsilon_{{\rm rel}} |\ln a_{i}^{\star}| + \epsilon_{{\rm abs}} 
+|\ln\bar{a}_{e, i}-\ln a_{e, i}^{\star}| 
+\leq \epsilon_{{\rm rel}} |\ln a_{e, i}^{\star}| + \epsilon_{{\rm abs}} 
 \qquad(i=1,\ldots,{\rm N}_e).
 \label{eq:acceptance-test-lna}
 \end{equation}
@@ -799,6 +800,7 @@ Eq.~(\ref{eq:acceptance-test-mu}) and more indifferent towards temperature chang
 one could use the approach detailed in \citet{Leal2016b} that permits apparent standard chemical 
 potentials of the species to be calculated using equilibrium constants of reactions.
 
+\sveta{
 %---------------------------------------------------------------------------------------------------%
 To predicted amounts of the kinetic species, we control the variation in the kinetic rates, i.e., 
 %
@@ -809,13 +811,15 @@ To predicted amounts of the kinetic species, we control the variation in the kin
 \label{eq:acceptance-test-rates}
 \end{equation}
 %
-where $\bar{r}_i - r^{\star}_i = {\tfrac{\partial r_i}{\partial n}}^\star (n - n^\star)
+where $\bar{r}_i - r^{\star}_i = {\tfrac{\partial r_i}{\partial n}}^\star (\bar{n} - n^\star)
 = {\tfrac{\partial r_i}{\partial n}}^\star
 \begin{bmatrix} 
-n_{e} - n^\star_e \\ 
-n_{k} - n^\star_k 
-\end{bmatrix}$.
-
+\bar{n}_{e} - n^\star_e \\ 
+\bar{n}_{k} - n^\star_k 
+\end{bmatrix}$ with $\bar{n}_{e}$ and $\bar{n}_{k}$ being estimated amounts of species.
+%
+TODO: Explain more here?
+}
 
 %---------------------------------------------------------------------------------------------------%
 \subsection{Smart Chemical Equilibrium / Kinetics Algorithm \label{subsec:Smart-chemical-algorithm}}
@@ -873,44 +877,48 @@ speciation calculation ends. Otherwise, a complete chemical equilibrium calculat
 performed using GEM algorithm $n_e=\varphi(T,P,b_e)$. It is followed by similar derivative evaluation 
 operations, as presented above, when the smart equilibrium algorithm was invoked for the first time.
 
+\sveta{
 %---------------------------------------------------------------------------------------------------%
 The smart algorithm for kinetically controlled reactions is presented with the flowchart in 
 Figure~\ref{fig:algorithm-diagram-kinetics}. It begins with integrating the system of ODEs 
-Eq.~(\ref{eq:kinetics}) for reconstruction of kinetic species. After that or simultaneously, 
-the sensitivity derivatives $\tfrac{n_k}{n^\circ_k}$ are calculated. Once this information is 
+Eq.~(\ref{eq:kinetics}) for the reconstruction of kinetic species. After that or simultaneously, 
+the sensitivity matrix $\partial {n_k}/ \partial {n^\circ_k}$ is calculated. Once this information is 
 collected, it is saved for future fast and accurate predictions of kinetic states, where the input 
 conditions are relatively close to the one just stored (i.e., learned):
 %
 \begin{itemize}
 \item input conditions $n^\circ_k$;
-\item corresponding calculated kinetics amounts of species $n_k$;
-\item sensitivity derivatives of the calculated kinetic state $\tfrac{n_k}{n^\circ_k}$;
+\item corresponding calculated amounts of kinetic species $n_k$;
+\item sensitivity derivatives of the calculated kinetic state ${\partial n_k} / {\partial n^\circ_k}$;
 \item properties of the corresponding chemical state, such as chemical rates $r$ and the composition 
 of equilibrium species $n_e$.
 \end{itemize}
 %---------------------------------------------------------------------------------------------------%
 Next time, when the algorithm needs to solve a new kinetic path, it first retrieves the closest 
 $(n^\circ_k)^\star$ to the given $n^\circ_k$ among all saved kinetic initial conditions in 
-$\mathcal{I}_k$. Next, the previously calculated potentially suitable kinetic state $n_k$ is used as 
-a reference to estimate the new kinetic state using Eq.~(\ref{eq:smart-estimate-kinetics}).
-At the end, it remains to control whether the estimated kinetic state $\bar{n}_k$ satisfies the 
-variational acceptance criterion defined by Eq.~(\ref{eq:acceptance-test-rates}). If this inequality 
-is satisfied, then the calculation ends. Otherwise, a complete numerical integration with initial 
-state $n^\circ_k$ is performed using the system Eq. \ref{eq:kinetics}. It is followed by the
-evaluation of sensitivities, as discussed above, when the smart equilibrium algorithm was invoked 
+$\mathcal{I}_k$. Next, the previously calculated potentially suitable kinetic state ${n_k}^\star$ is 
+used as a reference to estimate the new kinetic state using Eq.~\eqref{eq:smart-estimate-kinetics}.
+In the end, it remains to control whether the estimated kinetic state $\bar{n}_k$ satisfies the 
+variational acceptance criterion defined by Eq.~\eqref{eq:acceptance-test-rates}. If this inequality 
+is satisfied, then the calculation ends. Otherwise, complete numerical integration with the initial 
+state $n^\circ_k$ is performed using the system Eq.~\eqref{eq:kinetics}. It is followed by the
+evaluation of sensitivities as discussed-above, when the smart equilibrium algorithm was invoked 
 for the first time.
+}
 
 %---------------------------------------------------------------------------------------------------%
 \section{Results\label{sec:Results}}
 
+\sveta{
 We present here an example of using the smart chemical equilibrium / kinetics algorithm in a 
 reactive transport simulation and show how its performance and precision compare to the use of a 
 conventional chemical equilibrium / kinetics algorithms, based on either the Gibbs energy 
 minimization for equilibrium species \citep{Leal2016a,Leal2017} or numerical integration for 
-kinetically controlled ones. Moreover, we demonstrate the results of coupling Reaktoro to an 
-open-source finite element library Firedrake that is used to model transport after the splitting of 
-reactive transport equation. For details on how we solve the reactive transport equations, see 
-Appendix~\ref{sec:Reactive-Transport-Equations}.
+kinetically controlled ones \citep{Leal2017d}. Moreover, we demonstrate the results of coupling 
+\texttt{Reaktoro} to an open-source finite element library \texttt{Firedrake} that is used to model 
+transport after the operator-splitting of the reactive transport. For details on how we solve the 
+reactive transport equations, see Appendix~\ref{sec:Reactive-Transport-Equations}.
+}
 
 \subsection*{Reactive Transport Problem\label{subsec:Reactive-Transport-Problem}}
 
@@ -918,26 +926,28 @@ Appendix~\ref{sec:Reactive-Transport-Equations}.
 The reactive transport modeling example carried out in this work is illustrated in 
 Figure~\ref{fig:illustration-reactive-transport-model}. Here, the initial mineral composition of 
 the horizontal porous rock column consists of 98\%$_{{\rm vol}}$ SiO$_{2}$(quartz) and 
-2\%$_{{\rm vol}}$ CaCO$_{3}$(calcite), with an initial porosity of 10\% ($\phi = 0.1$). The resident 
+2\%$_{{\rm vol}}$ CaCO$_{3}$(calcite), with an initial porosity of 10\% i.e., $\phi_{L} = 0.1$
+where $\phi_{L}$ is a porosity at the cell on the inflow boundary. The resident 
 fluid is a 0.70~molal~NaCl brine in equilibrium with the rock minerals (our calculated equilibrium 
-state indicates a pH of about 9.2). The aqueous fluid, injected on the left side of this rock 
-column, is the result of mixing 1~kg of water with 0.90~moles of NaCl, 0.05~moles of MgCl$_{2}$,
+state indicates a pH of about 9.2). The aqueous fluid injected on the left side of this rock 
+column is the result of mixing 1~kg of water with 0.90~moles of NaCl, 0.05~moles of MgCl$_{2}$,
 0.01~moles of CaCl$_{2}$, and 0.75~moles of CO$_{2}$. This amount of CO$_{2}$ is enough to bring 
 the aqueous fluid close to CO$_{2}$ saturation at 100 bar, and thus in an acidic state, with a 
 calculated pH of~3.05. The temperature and pressure of both resident and injected fluids
 are 60~°C and 100~bar, respectively. The simplified reactive transport modeling assumes a constant 
 fluid pore velocity (set in each cell) of $\boldsymbol{v}=\unit[1]{m/week}$ 
 ($\unit[5.95\cdot10^{-6}]{m/s}$) and the same diffusion coefficient $D=\unit[10^{-9}]{m^{2}/s}$ 
-for all fluid species. The longitudinal dispersivity is estimated as $D \, \phi\,/\,\boldsymbol{v}$, 
-which in this case is 100 times less than the usually accepted dispersivity of $10^{-3}$ m. 
+for all fluid species. %The longitudinal dispersivity is estimated as $D \, \phi\,/\,\boldsymbol{v}$, 
+%which in this case is 100 times less than the usually accepted dispersivity of $10^{-3}$ m. 
+\sveta{
 Considered 1~m rock is discretized by the column mesh with 100~cells. The reactive transport 
 simulation runs with 10`000 steps of uniform time step of 30~min, which results in 1'000'000 
 chemical kinetics and equilibrium evaluations.
-%
+}
 
 \begin{figure}
 \begin{centering}
-\includegraphics[width=1\textwidth]{figures/equilibrium/transport-scheme}
+\includegraphics[width=0.7\textwidth]{figures/equilibrium/transport-scheme}
 \par\end{centering}
 \caption{\label{fig:illustration-reactive-transport-model}Illustration of
  reactive transport modeling along a one-dimensional rock core, including
@@ -1045,20 +1055,20 @@ algorithm learned enough distinct chemical equilibrium problems on a few upstrea
 the left boundary), which then could be successfully used for quick and accurate estimates for the 
 rest of the cells downstream. To be precise, injecting the reactive fluid inside the rock core 
 promotes strong compositional changes in both resident fluid and rock minerals. Because
-of this, during the first time step, the algorithm requires \emph{on-demand learning} in 6 cells next 
-to the left boundary (see the empty circles $\circ$ in Figure~\ref{fig:calcite-dolomite}). As the 
-perturbation fronts move down the rock core, additional learning is performed as needed to fulfil 
-a given accuracy criterion; here $\epsilon_{{\rm rel}}=0.1$ and $\epsilon_{{\rm abs}}=10^{-8}$ are 
+of this, during the first time step, the algorithm requires \emph{on-demand learning} in 6 cells 
+next to the left boundary (see the empty circles $\circ$ in Figure~\ref{fig:calcite-dolomite}). 
+As the perturbation fronts move down the rock core, additional learning is performed as needed 
+to fulfil a given accuracy criterion; here $\epsilon_{{\rm rel}}=10^{-1}$ and 
+$\epsilon_{{\rm abs}}=10^{-8}$ are 
 used in Eq.~(\ref{eq:acceptance-test-mu}). As seen in Figure~\ref{fig:calcite-dolomite} (after 5h, 
 or 10~time steps), 2~cells required a full and expensive chemical equilibrium calculation to both 
 ensure accuracy and enable on-demand learning. 
-{\color{red}
-We also point out that after curtain amount of the 
-time steps, trainings that are expected to be triggered at the cells, where a change of phases is 
-happening, are not occurring any more. The algorithm has already 
-gathered enough information about the system on the first time steps (while dolomite 
-just started its precipitation and calcite its dissolution) that it does not have to learn any more
-further down the road .}
+\sveta{
+We also point out that after curtain amount of the time steps, trainings that are expected to be 
+triggered at the cells, where a change of phases is happening, are not occurring any more. The 
+algorithm has already gathered enough information about the system on the first time steps (while 
+dolomite just started its precipitation and calcite its dissolution) so it does not have to learn 
+any more further down the road .}
 %---------------------------------------------------------------------------------------------------%
 
 \begin{figure}[!t]
@@ -1079,22 +1089,25 @@ Error between results provided by the smart algorithm and reference values provi
 by the conventional approach. The $\ell_1$-norm of the error in the Calcite and Dolomite (left) 
 and in aqueous species (right).}
 \end{figure}
-
+\sveta{
 %---------------------------------------------------------------------------------------------------%
 The percentage of the error measured in $\ell_1$-norm is illustrated in Figure \ref{fig:error}. 
-We see that the $\ell_1$-norm of the error in the Calcite and Dolomite lies in the range 
+We see that the $\ell_1$-norm of the error in the calcite and dolomite minerals lies in the range 
 $[10^{-5}, 10^{-2}]$, whereas the error in aqueous species might get an order higher 
-$[10^{-5}, 10^{-1}]$. It can be explain with a slight delay in the smart algorithm to reproduce sharp 
-changes on ions concentration. This yields that the uncertainty in minerals' volumes is bounded by 
-1~\%, whereas, the inaccuracy of the aqueous concentration reproduced by the on-demand learning might 
-get up till 16~\% in several cells throughout simulation.
-
-\begin{figure}[!ht]
+$[10^{-5}, 10^{-1}]$. The latter can be related to a slight delay in the smart algorithm to reproduce 
+sharp changes in ions concentrations. This yields that the uncertainty in minerals' volumes is bounded 
+by 1~\%, whereas, the inaccuracy of the aqueous concentrations reproduced by the on-demand learning 
+is in average ?? \& but might get up to 10 or 16~\% in several cells throughout simulation. 
+TODO: check the average value!
+}
+\begin{figure}[!t]
 \begin{centering}
-\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-countings} \\
-\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-total}
-\par\end{centering}
-\caption{\label{fig:number-training-1}
+\subfloat[]{\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-countings}
+\label{fig:number-training-1}} \\
+\subfloat[]{\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-total}
+\label{fig:number-training-2}}
+\end{centering}
+\caption{\label{fig:number-training}
 The number of \emph{on-demand learning} operations triggered by the smart chemical equilibrium 
 algorithm w.r.t. to the reactive transport steps (on the top) and their accumulated number during 
 the reactive transport simulation (on the bottom) using a column mesh with 100~cells. The simulation 
@@ -1104,17 +1117,17 @@ were quickly and accurately estimated with the smart chemical equilibrium algori
 \end{figure}
 
 %---------------------------------------------------------------------------------------------------%
-Figure~\ref{fig:number-training-1} presents the number of on-demand learning operations occurring 
-(on the top) and accumulated (on the bottom) during the reactive transport simulation. For the top 
-subplot, note rather high total number growth on the initial time steps, where the smart chemical 
-equilibrium algorithm is actively learning new chemical states. That corresponds to the bottom 
-illustration, where for the first RT steps full Gibbs energy minimization calculations are needed 
-to be performed in up to 6 cells out of 100 ones. 
+Figure~\ref{fig:number-training} presents the number of on-demand learning operations (a) occurring 
+and (b) accumulated during the reactive transport simulation. In Figure \ref{fig:number-training-2}, 
+note rather high total number growth on the initial time steps, where the smart chemical equilibrium 
+algorithm is actively learning new chemical states. \sveta{The latter corresponds to Figure 
+\ref{fig:number-training-1}, where for the first reactive transport steps full Gibbs energy 
+minimization calculations are needed to be performed in up to 6 cells out of 100 ones.}
 %
 This is the result of the incoming brine perturbing the fluid composition on the left side of the 
 horizontal rock core. As time passes, the increment of total on-demand learning operations becomes 
 very small, about 1~or 2~cells per time step. The latter can be observed on the top subplot in 
-Figure~\ref{fig:number-training-1}). 
+Figure~\ref{fig:number-training}). 
 %
 Eventually, the smart prediction algorithm becomes knowledgeable enough about the recurring 
 equilibrium states in the simulation, so that it can quickly and accurately perform all subsequent
@@ -1137,7 +1150,6 @@ of transport calculations per time step is the time required when solving the di
 transport equations. The zero-search-cost smart equilibrium calculation is the costs of on-demand 
 learning algorithm excluding the costs for NN search.}
 \end{figure}
-
 %---------------------------------------------------------------------------------------------------%
 Figure~\ref{fig:computational-cost} compares the computational cost at each time step of: 
 \emph{(i)} conventional chemical equilibrium calculations, 
@@ -1246,12 +1258,14 @@ acceleration of the algorithm.
 
 \subsection{Smart algorithm for chemical kinetics, HKF activity model \label{subsec:part-2}}
 
+\sveta{
 Next, let us consider the performance of the smart chemical kinetics algorithm.
 %---------------------------------------------------------------------------------------------------%
 The on-demand learning for chemical equilibrium algorithm, discussed in the details in Subsection 
 \ref{subsec:part-1}, is heavily used in the simulations of kinetically controlled species. 
 We clarify the steps of the ODML algorithm for chemical kinetics for each reactive transport 
 step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$ in Algorithm \ref{eq:kinetics-algorithm}.
+}
 %
 \begin{comment}
 \begin{itemize} 
@@ -1270,6 +1284,7 @@ empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles
 \end{itemize}
 \end{comment}
 
+\sveta{
 \begin{figure}[!t]
 \begin{centering}
 \includegraphics[width=0.7\textwidth]{figures/kinetics/algorithm.png}
@@ -1292,7 +1307,6 @@ empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles
 \caption{The ODML algorithm for chemical kinetics for each reactive transport step.}
 \label{eq:kinetics-algorithm}
 \end{algorithm}
-
 %
 %---------------------------------------------------------------------------------------------------%
 In the chemical model part, the activity coefficients of the aqueous species are calculated using
@@ -1338,7 +1352,7 @@ for neutral mechanism,
 $\log k_{i}^{\circ} = -0.30 \mathrm{{mol}/{m^2\,s}}$, \;$E_i$ = 14.4 $\mathrm{{kJ}/{mol^4}}$, 
 $a[H^+]$ = 1.0.
 The specific surface area of calcite is set to be 5000~${\rm {cm^2}/{g}}$. 
-
+}
 
 \subsubsection{Smart Prediction Analysis
 \label{subsec:Performance-and-Accuracy-Kinetics}}
@@ -1877,6 +1891,160 @@ for their financial support.
 
 \appendix
 
+\section{Reactive Transport Equations\label{sec:Reactive-Transport-Equations}}
+
+Composition of each particle evolve according to the follwing set
+of ODEs:
+
+\begin{alignat*}{2}
+\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,{\rm N}),
+\end{alignat*}
+where $T$ is the transport operator that consists of advection and
+diffusion, $R$ is reaction operator. First order splitting method:
+the solution advances from the time $t_{0}$ for a small time step
+$\Delta t$ in the following order:
+\begin{itemize}
+\item solve transport equation, such that solution is denoted by $\overline{n}:$
+%
+\[
+\begin{cases}
+\frac{\partial n}{\partial t} & =T(n)\\
+n(t_{0}) & =\boldsymbol{n_{0}}
+\end{cases}
+\]
+\item from the initial condition $\overline{n}$, solve the reaction equation
+to obtain $\tilde{n}$:
+\[
+\begin{cases}
+\frac{\partial n}{\partial t} & =T(n)\\
+n(t_{0}) & =\boldsymbol{\overline{n}}
+\end{cases}
+\]
+\end{itemize}
+
+The fundamental mass conservation equations for both fluid and solid
+species are:
+\begin{alignat}{2}
+\frac{\partial n_{i}^{\rm f}}{\partial t}+\nabla\cdot(\boldsymbol{v}n_{i}^{\rm f}-D\nabla n_{i}^{\rm f}) & =r_{i}^{\rm f} & \qquad & (i=1,\ldots,{\rm N}^{\rm f}),\label{eq:cons-mass-fluid-species}\\
+\frac{\partial n_{i}^{\rm s}}{\partial t} & =r_{i}^{\rm s} &  & (i=1,\ldots,{\rm N}^{\rm s}),\label{eq:cons-mass-solid-species}
+\end{alignat}
+where $n_{i}^{\rm f}$ and $n_{i}^{\rm s}$ are the \emph{bulk
+concentration} of the $i$th fluid and solid species (in mol/m$^{3}$),
+respectively; $\boldsymbol{v}$ is the fluid pore velocity (in m/s);
+$D$ is the diffusion coefficient of the fluid species (in m$^{2}$/s);
+$r_{i}^{\rm f}$ and $r_{i}^{\rm s}$ are the rates of production\slash consumption
+of the $i$th fluid and solid species (in mol\slash s), respectively,
+due to chemical reactions; and ${\rm N}^{\rm f}$ and ${\rm N}^{\rm s}$
+are the numbers of fluid and solid species, respectively. Note that
+the above equations assume a single fluid phase and common diffusion
+coefficients for all fluid species.
+
+By partitioning the species as fluid and solid species, the formula
+matrix $A$ can be conveniently represented as:
+\begin{equation}
+A=\begin{bmatrix}A^{\rm f} & A^{\rm s}\end{bmatrix},
+\end{equation}
+where $A^{\rm f}$ and $A^{\rm s}$ are the formula matrices
+of the fluid and solid partitions (i.e., the matrices constructed
+from the columns of $A$ corresponding to fluid and solid species).
+The concentrations of elements in both fluid and solid partitions
+$b_{j}^{\rm f}$ and $b_{j}^{\rm s}$ can then be calculated
+from the species concentrations in the same partition using: 
+\begin{alignat}{2}
+b_{j}^{\rm f} & =\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}n_{i}^{\rm f} & \qquad & (j=1,\ldots,{\rm E})\\
+\shortintertext{and}b_{j}^{\rm s} & =\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}n_{i}^{\rm s} &  & (j=1,\ldots,{\rm E}).
+\end{alignat}
+
+Recall that the rates of production of the species $r_{i}^{\rm f}$
+and $r_{i}^{\rm s}$ are exclusively due to chemical reactions.
+Let $r_{i}$ denote the rate of production\slash consumption of the
+$i$th species in the system (i.e., using global index, and not a
+local index within the fluid or solid partition). From the mass conservation
+condition for the elements (chemical elements and electrical charge),
+it follows that:
+\begin{equation}
+\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j}}
+}
+}{\underbrace{\sum_{i=1}^{{\rm N}}A_{ji}r_{i}}}=\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j} in}\\
+{\rm the fluid partition}
+}
+}{\underbrace{\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}r_{i}^{\rm f}}}+\underset{\substack{{\rm rate of production}\\
+{\rm  of element \ensuremath{j} in}\\
+{\rm the solid partition}
+}
+}{\underbrace{\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}r_{i}^{\rm s}}}=\quad0,
+\end{equation}
+which is the mathematical statement for the fact that \emph{elements
+are neither created nor destroyed} during chemical reactions. We can
+combine this result with equations (\ref{eq:cons-mass-fluid-species})
+and (\ref{eq:cons-mass-solid-species}) to derive the following conservation
+equations for the elements:
+\begin{equation}
+\frac{\partial b_{j}^{\rm s}}{\partial t}+\frac{\partial b_{j}^{\rm f}}{\partial t}+\nabla\cdot(\boldsymbol{v}b_{j}^{\rm f}-D\nabla b_{j}^{\rm f})=0\qquad(j=1,\ldots,{\rm E}).
+\end{equation}
+
+Assume that all species, fluid and solid, are in \emph{local chemical
+equilibrium everywhere, at all times}. One can then perform \emph{operator
+splitting steps} to solve the fundamental mass conservation equations
+(\ref{eq:cons-mass-fluid-species}) and (\ref{eq:cons-mass-solid-species})
+to calculate the concentrations of the species, $n_{i}$, over time.
+Let $k$ denote the current \emph{time step} and $\Delta t$ the \emph{time
+step length} used in the discretization of the time derivative terms.
+The operator splitting steps at the $k$th time step are:
+
+
+\begin{enumerate}[wide, labelwidth=!, labelindent=0pt]
+\item[\textbf{Step 1)}] We consider (Eq.~\ref{eq:transport}) without
+${\partial b_{j}^{\text{s}}}/{\partial t}$ term and
+compute an intermediate approximation of element concentrations in the fluid
+partition $\tilde{b}^{\text{f}}=(\tilde{b}_{1}^{\text{f}},\ldots,\tilde{b}_{\mathrm{E}}^{\text{f}})$
+at time $t_{k+1}$ using
+\begin{equation}
+\frac{\tilde{b}_{j}^{\text{f},k+1}-\tilde{b}_{j}^{\text{f},k}}{\Delta t}+\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{\text{f},k+1}-D\nabla\tilde{b}_{j}^{\text{f},k+1})=0\qquad(j=1,\ldots,\text{E}),\label{eq:fluid-element-transport}
+\end{equation}
+%
+with the following flux boundary condition at $x=x_{L}$ (on the left
+boundary inlet face, where we inject the CO$_{2}$-saturated brine):
+\begin{equation}
+-(\boldsymbol{v}\tilde{b}_{j}^{{\rm f},k+1}-D\nabla\tilde{b}_{j}^{{\rm f},k+1})\cdot\textbf{n}_{L}=v\phi_{L}\hat{b}_{j,L}
+\qquad(j=1,\ldots,{\rm E}),
+\end{equation}
+%
+where subscript $L$ denotes the left boundary at $x=x_{L}$,
+$\textbf{n}_{L}$ is the normal vector on the inflow face,
+$\phi_{L}$ is the current porosity at $x=x_{L}$ (which changes with time),
+and $\hat{b}_{j,L}$ (in $\mathrm{mol/m_{\mathrm{fluid}}^{3}}$) is the imposed concentration of the $j$th element in the injected brine.
+%
+To match the units of concentrations of the elements in the fluid $[b_{j}]=\mathrm{mol/m_{\mathrm{bulk}}^{3}}$
+and the imposed concentration $[\hat{b}_{j,L}]=\mathrm{mol/m_{\mathrm{fluid}}^{3}}$ , we need to
+multiply it by $\phi_{L}$ ($\mathrm{m_{fluid}^{3}/m_{bulk}^{3}}$). The right face 
+pf the rock is considered free. 
+%
+To discretize the above partial differential equations in space, a finite volume method is applied.
+The time integration uses an implicit scheme for both advection and diffusion.
+%
+\item[\textbf{Step 2)}] Update the total concentrations of each element $b_{j}$ using
+the previously computed intermediate concentrations of each element in the fluid $b_{j}^{\mathrm{f}}$:
+%
+\begin{equation}
+b_{j}^{k+1}=\tilde{b}_{j}^{\text{f},k+1}+b_{j}^{\text{s},k}.
+\end{equation}
+%
+Note that each element concentration in the solid partition $b_{j}^{\mathrm{s}}$
+remains constant during the transport calculations in the previous
+step.
+\item[\textbf{Step 3)}] Calculate the concentrations of the species, $n_{i}^{k+1}$, in
+each mesh cell. For this, use as inputs the temperature and pressure
+values of the cell together with the \emph{updated local concentrations
+of elements}, $b_{j}^{k+1}$, from the previous step. Let the on-demand
+learning algorithm determine, in each cell, if it needs to fully solve
+the current equilibrium problem or if it can quickly estimate the
+species amounts $n=(n_{1},\ldots,n_{\mathrm{N}})$ using a previously
+learned problem with similar inputs.
+\end{enumerate}
+ 
 \section{Chemical Kinetics Equations \label{subsec:Chemical-kinetics-equations}}
 
 %---------------------------------------------------------------------------------------------------%
@@ -2163,160 +2331,6 @@ and thus whenever the formula matrix $A$ is full rank, ${\rm C}={\rm E}$
 and ${\rm M}={\rm N}-{\rm E}$. For more information on how to
 solve these equations and how they are related to the conventional
 law of mass action equations, see \citet{Leal2016c,Leal2017}.
-
-\section{Reactive Transport Equations\label{sec:Reactive-Transport-Equations}}
-
-Composition of each particle evolve according to the follwing set
-of ODEs:
-
-\begin{alignat*}{2}
-\frac{\partial n_{i}}{\partial t} & =T(n_{i})+R(n_{i}) & \qquad & (i=1,\ldots,{\rm N}),
-\end{alignat*}
-where $T$ is the transport operator that consists of advection and
-diffusion, $R$ is reaction operator. First order splitting method:
-the solution advances from the time $t_{0}$ for a small time step
-$\Delta t$ in the following order:
-\begin{itemize}
-\item solve transport equation, such that solution is denoted by $\overline{n}:$
-%
-\[
-\begin{cases}
-\frac{\partial n}{\partial t} & =T(n)\\
-n(t_{0}) & =\boldsymbol{n_{0}}
-\end{cases}
-\]
-\item from the initial condition $\overline{n}$, solve the reaction equation
-to obtain $\tilde{n}$:
-\[
-\begin{cases}
-\frac{\partial n}{\partial t} & =T(n)\\
-n(t_{0}) & =\boldsymbol{\overline{n}}
-\end{cases}
-\]
-\end{itemize}
-
-The fundamental mass conservation equations for both fluid and solid
-species are:
-\begin{alignat}{2}
-\frac{\partial n_{i}^{\rm f}}{\partial t}+\nabla\cdot(\boldsymbol{v}n_{i}^{\rm f}-D\nabla n_{i}^{\rm f}) & =r_{i}^{\rm f} & \qquad & (i=1,\ldots,{\rm N}^{\rm f}),\label{eq:cons-mass-fluid-species}\\
-\frac{\partial n_{i}^{\rm s}}{\partial t} & =r_{i}^{\rm s} &  & (i=1,\ldots,{\rm N}^{\rm s}),\label{eq:cons-mass-solid-species}
-\end{alignat}
-where $n_{i}^{\rm f}$ and $n_{i}^{\rm s}$ are the \emph{bulk
-concentration} of the $i$th fluid and solid species (in mol/m$^{3}$),
-respectively; $\boldsymbol{v}$ is the fluid pore velocity (in m/s);
-$D$ is the diffusion coefficient of the fluid species (in m$^{2}$/s);
-$r_{i}^{\rm f}$ and $r_{i}^{\rm s}$ are the rates of production\slash consumption
-of the $i$th fluid and solid species (in mol\slash s), respectively,
-due to chemical reactions; and ${\rm N}^{\rm f}$ and ${\rm N}^{\rm s}$
-are the numbers of fluid and solid species, respectively. Note that
-the above equations assume a single fluid phase and common diffusion
-coefficients for all fluid species.
-
-By partitioning the species as fluid and solid species, the formula
-matrix $A$ can be conveniently represented as:
-\begin{equation}
-A=\begin{bmatrix}A^{\rm f} & A^{\rm s}\end{bmatrix},
-\end{equation}
-where $A^{\rm f}$ and $A^{\rm s}$ are the formula matrices
-of the fluid and solid partitions (i.e., the matrices constructed
-from the columns of $A$ corresponding to fluid and solid species).
-The concentrations of elements in both fluid and solid partitions
-$b_{j}^{\rm f}$ and $b_{j}^{\rm s}$ can then be calculated
-from the species concentrations in the same partition using: 
-\begin{alignat}{2}
-b_{j}^{\rm f} & =\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}n_{i}^{\rm f} & \qquad & (j=1,\ldots,{\rm E})\\
-\shortintertext{and}b_{j}^{\rm s} & =\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}n_{i}^{\rm s} &  & (j=1,\ldots,{\rm E}).
-\end{alignat}
-
-Recall that the rates of production of the species $r_{i}^{\rm f}$
-and $r_{i}^{\rm s}$ are exclusively due to chemical reactions.
-Let $r_{i}$ denote the rate of production\slash consumption of the
-$i$th species in the system (i.e., using global index, and not a
-local index within the fluid or solid partition). From the mass conservation
-condition for the elements (chemical elements and electrical charge),
-it follows that:
-\begin{equation}
-\underset{\substack{{\rm rate of production}\\
-{\rm  of element \ensuremath{j}}
-}
-}{\underbrace{\sum_{i=1}^{{\rm N}}A_{ji}r_{i}}}=\underset{\substack{{\rm rate of production}\\
-{\rm  of element \ensuremath{j} in}\\
-{\rm the fluid partition}
-}
-}{\underbrace{\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}r_{i}^{\rm f}}}+\underset{\substack{{\rm rate of production}\\
-{\rm  of element \ensuremath{j} in}\\
-{\rm the solid partition}
-}
-}{\underbrace{\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}r_{i}^{\rm s}}}=\quad0,
-\end{equation}
-which is the mathematical statement for the fact that \emph{elements
-are neither created nor destroyed} during chemical reactions. We can
-combine this result with equations (\ref{eq:cons-mass-fluid-species})
-and (\ref{eq:cons-mass-solid-species}) to derive the following conservation
-equations for the elements:
-\begin{equation}
-\frac{\partial b_{j}^{\rm s}}{\partial t}+\frac{\partial b_{j}^{\rm f}}{\partial t}+\nabla\cdot(\boldsymbol{v}b_{j}^{\rm f}-D\nabla b_{j}^{\rm f})=0\qquad(j=1,\ldots,{\rm E}).
-\end{equation}
-
-Assume that all species, fluid and solid, are in \emph{local chemical
-equilibrium everywhere, at all times}. One can then perform \emph{operator
-splitting steps} to solve the fundamental mass conservation equations
-(\ref{eq:cons-mass-fluid-species}) and (\ref{eq:cons-mass-solid-species})
-to calculate the concentrations of the species, $n_{i}$, over time.
-Let $k$ denote the current \emph{time step} and $\Delta t$ the \emph{time
-step length} used in the discretization of the time derivative terms.
-The operator splitting steps at the $k$th time step are:
-
-
-\begin{enumerate}[wide, labelwidth=!, labelindent=0pt]
-\item[\textbf{Step 1)}] We consider (Eq.~\ref{eq:transport}) without
-${\partial b_{j}^{\text{s}}}/{\partial t}$ term and
-compute an intermediate approximation of element concentrations in the fluid
-partition $\tilde{b}^{\text{f}}=(\tilde{b}_{1}^{\text{f}},\ldots,\tilde{b}_{\mathrm{E}}^{\text{f}})$
-at time $t_{k+1}$ using
-\begin{equation}
-\frac{\tilde{b}_{j}^{\text{f},k+1}-\tilde{b}_{j}^{\text{f},k}}{\Delta t}+\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{\text{f},k+1}-D\nabla\tilde{b}_{j}^{\text{f},k+1})=0\qquad(j=1,\ldots,\text{E}),\label{eq:fluid-element-transport}
-\end{equation}
-%
-with the following flux boundary condition at $x=x_{L}$ (on the left
-boundary inlet face, where we inject the CO$_{2}$-saturated brine):
-\begin{equation}
--(\boldsymbol{v}\tilde{b}_{j}^{{\rm f},k+1}-D\nabla\tilde{b}_{j}^{{\rm f},k+1})\cdot\textbf{n}_{L}=v\phi_{L}\hat{b}_{j,L}
-\qquad(j=1,\ldots,{\rm E}),
-\end{equation}
-%
-where subscript $L$ denotes the left boundary at $x=x_{L}$,
-$\textbf{n}_{L}$ is the normal vector on the inflow face,
-$\phi_{L}$ is the current porosity at $x=x_{L}$ (which changes with time),
-and $\hat{b}_{j,L}$ (in $\mathrm{mol/m_{\mathrm{fluid}}^{3}}$) is the imposed concentration of the $j$th element in the injected brine.
-%
-To match the units of concentrations of the elements in the fluid $[b_{j}]=\mathrm{mol/m_{\mathrm{bulk}}^{3}}$
-and the imposed concentration $[\hat{b}_{j,L}]=\mathrm{mol/m_{\mathrm{fluid}}^{3}}$ , we need to
-multiply it by $\phi_{L}$ ($\mathrm{m_{fluid}^{3}/m_{bulk}^{3}}$). The right face 
-pf the rock is considered free. 
-%
-To discretize the above partial differential equations in space, a finite volume method is applied.
-The time integration uses an implicit scheme for both advection and diffusion.
-%
-\item[\textbf{Step 2)}] Update the total concentrations of each element $b_{j}$ using
-the previously computed intermediate concentrations of each element in the fluid $b_{j}^{\mathrm{f}}$:
-%
-\begin{equation}
-b_{j}^{k+1}=\tilde{b}_{j}^{\text{f},k+1}+b_{j}^{\text{s},k}.
-\end{equation}
-%
-Note that each element concentration in the solid partition $b_{j}^{\mathrm{s}}$
-remains constant during the transport calculations in the previous
-step.
-\item[\textbf{Step 3)}] Calculate the concentrations of the species, $n_{i}^{k+1}$, in
-each mesh cell. For this, use as inputs the temperature and pressure
-values of the cell together with the \emph{updated local concentrations
-of elements}, $b_{j}^{k+1}$, from the previous step. Let the on-demand
-learning algorithm determine, in each cell, if it needs to fully solve
-the current equilibrium problem or if it can quickly estimate the
-species amounts $n=(n_{1},\ldots,n_{\mathrm{N}})$ using a previously
-learned problem with similar inputs.
-\end{enumerate}
 
 \section{SA = 50}
 
