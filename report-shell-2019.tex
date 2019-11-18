@@ -154,10 +154,11 @@ In reactive transport simulations, coupled chemical and physical processes are m
 phenomena that involve the transport of chemical species (i.e. reactants) and chemical reactions. 
 Examples of chemical processes are reactions between species in an aqueous fluid leading to 
 precipitation of solid minerals, or their reaction with existing rock minerals causing mineral 
-dissolution. Examples of physical processes are the advection of chemical species in a fluid that flows 
-with a certain velocity, or the diffusion of those fluid species as a result of the concentration 
-gradient across the medium. Because of the various processes combined into a reactive transport model, 
-the resulting computer simulations are usually time-consuming.
+dissolution (see \cite{Lichtner1985, Steefel2005, Steefel2019} and references therein). Examples of 
+physical processes are the advection of chemical species in a fluid that flows with a certain 
+velocity, or the diffusion of those fluid species as a result of the concentration gradient across 
+the medium. Because of the various processes combined into a reactive transport model, the resulting 
+computer simulations are usually time-consuming.
 
 %---------------------------------------------------------------------------------------------------%
 Often, the relatively long computing time of reactive transport simulations can be largely attributed 
@@ -165,7 +166,7 @@ to the need of performing millions to billions of chemical reaction calculations
 \emph{chemical kinetics} and\slash or \emph{equilibrium speciation calculations} performed in every 
 mesh cell during every time step of the simulation. These chemical reaction calculations are 
 computationally expensive because they involve iterative algorithms to solve systems of non-linear 
-algebraic (SnLAE) and\slash or ordinary differential equations (ODEs) \citep{Leal2017}. As a result, 
+algebraic and\slash or system of ordinary differential equations (ODEs) \citep{Leal2017}. As a result, 
 they trigger repeated evaluations of thermodynamic properties, such as activity\slash fugacity 
 coefficients (sometimes using computationally demanding models such as \citet{Pitzer1973} for aqueous 
 phases and \citet{Peng1976} for gaseous/liquid phases).
@@ -195,14 +196,18 @@ Trangenstein1986,VanZeggeren1970,Vonka1995,Wolery1975,Zeleznik1960}.
 However, even if one could devise a hypothetical algorithm that would always converge in a single 
 iteration, instead of the typical few to dozens of iterations, the computational cost of chemical 
 equilibrium calculations could still be dominant in a reactive transport simulation. This is the case, 
-as during this single iteration, expensive thermodynamic models would still have to be evaluated and 
-matrix equations be solved, when using a Newton-based GEM or LMA algorithm. In view of this, a 
-substantial acceleration of these calculations can be achieved if those costly operations
-can be bypassed whenever possible. Similarly, advanced methods for solving system of ODEs has been 
-developed during couple of last decades \cite{HairerNorsettWanner1993, HairerWanner1996}. 
-However, we aim to develop such an approach that sidesteps costly numerical integration of the system 
+as during this single iteration expensive thermodynamic models would still have to be evaluated and 
+matrix equations have to be solved (using a Newton-based GEM or LMA algorithm). In view of this, 
+a substantial acceleration of these calculations can be achieved if those costly operations
+can be bypassed whenever possible. 
+\sveta{
+Similarly, advanced methods for solving a system of differential equations has been 
+developed during a couple of last decades \cite{Ascher1998,HairerNorsettWanner1993,HairerWanner1996}. 
+Due to rapid variations in some of the species' reaction rates, the behaviour of kinetically-controlled 
+species are often represented by the stiff system of ODEs, which adds additional difficulty. 
+However, we aim to apply such an approach that sidesteps costly numerical integration of the system 
 that governs the evolution of kinetics species within considered transport step.
-
+}
 \begin{figure}[!t]
 	\centering
 	\subfloat[]{
@@ -231,12 +236,12 @@ between the input element amounts and the amounts of elements calculated from th
 amounts). 
 
 %---------------------------------------------------------------------------------------------------%
-The main principle of the \emph{algorithm}, suggested here, is precisely to \emph{avoid} as much as 
+The main principle of the \emph{ODML algorithm} suggested here is precisely to \emph{avoid} as much as 
 possible full and expensive chemical speciation calculations during the reactive transport simulation. 
-That is why it is often referred as \emph{smart chemical equilibrium algorithm}. By using 
+That is why it is often referred to as \emph{smart chemical equilibrium algorithm}. By using 
 \emph{sensitivity derivatives} of previously computed chemical equilibrium states, we can quickly 
 and accurately estimate the new equilibrium state (chemical speciation) under similar input conditions
-(see Figure \ref{fig:similar-equilibrium}). These derivatives provide an insight on how sensitive
+(see Figure \ref{fig:similar-equilibrium}). These derivatives provide an insight into how sensitive
 the computed species amounts at a certain equilibrium state are with respect to infinitesimally small 
 changes in temperature, pressure, and amounts of chemical elements. Thus, multiplying these sensitivity 
 derivatives by the respective differences in input conditions (e.g., differences in temperature
@@ -245,19 +250,22 @@ can estimate how much the species amounts would change by increasing temperature
 1~mmol of HCl into the system (which is equivalent to adding 1~mmol of elements H and Cl), or by 
 combining these with other input changes. We remark that the use of sensitivity derivatives to estimate 
 the solution of an equilibrium problem is inherently \emph{mass conservative}, since they are being 
-computed along the derivation of chemical equilibrium equations (with equations of element mass 
+computed along with he derivation of chemical equilibrium equations (with equations of element mass 
 conservation included).
 
 %---------------------------------------------------------------------------------------------------%
-If kinetically controlled species are considered, one can find similarities in their initial 
-states at each transport step. Figure \ref{fig:similar-kinetics} illustrated possible perturbations 
-of fluid/rock compositions in mess cells discretising two-dimensional reservoir. \emph{Smart chemical 
-kinetics algorithm} will perform numerical integration of the system of kinetic species only in 
-firstly evaluated/uniquely distinguished initial states (marked with empty circles in Figure 
-\ref{fig:similar-kinetics}), recovering simultaneously additional information about their sensitivities 
-with respect to (w.r.t.) infinitesimal changes in the initial condition. In the rest of the subsequently 
-encountered cells, we attempt to make \emph{smart prediction} of the possible kinetic speciation at the 
-end of the transport step.
+\sveta{
+For kinetically controlled species, one can find similarities in their initial 
+states at each transport step. Figure \ref{fig:similar-kinetics} illustrates possible perturbations 
+of fluid/rock compositions in mesh cells discretising two-dimensional reservoir. \emph{Smart chemical 
+kinetics algorithm} will perform numerical integration of the system of kinetic species only for 
+some uniquely distinguishable initial states (marked with empty circles in Figure 
+\ref{fig:similar-kinetics}). Simultaneously, we also recover additional information about their 
+sensitivities with respect to infinitesimal changes in the initial condition. In the rest of the 
+subsequently encountered cells, we attempt to make \emph{smart prediction} of the possible kinetic 
+speciation at the end of the transport step, exploiting information collected in the previous 
+mesh-cells.
+}
 
 \subsubsection*{Related Work}
 
@@ -275,17 +283,18 @@ the simulation process. This approach is referred to in the literature as the \e
 tabulation} (ISAT) algorithm. The ISAT approximation idea was later extended to \emph{nonlinear
 model predictive control} (NMPC) in \citep{HedengrenEdgar2008}. ISAT can be regarded as an alternative 
 to artificial neural networks, as it does not require any preliminary training to simulate the 
-behavior of the model. Instead, the it rearranges the model by the training on new data \emph{on the 
+behavior of the model. Instead, it rearranges the model by the training on new data \emph{on the 
 fly}, as simulations proceed. The ISAT algorithm scales quadratically with increased dimension, 
 approximates functions with discontinuities, and provides explicit bounds on approximation errors. 
-Recent improvements of this approach as well as its extension to reactive transport problem can be 
-found in \cite{Singer2004,Singer2006,Lu2007,Pope2009,Lu2009}.
+Recent improvements of the ISAT algorithm and\slash or its demonstration for the simulation of 
+unsteady, compressible, reactive flows can be found in 
+\cite{Singer2004,Singer2006,Lu2007,Pope2009,Lu2009}.
 %
 A series of parallel chemistry acceleration algorithms using different distribution strategies for
 simulation of unsteady, compressible, reactive flows, based on the ISAT technique, was implemented in 
-the software \texttt{\href{https://tcg.mae.cornell.edu/x2f_mpi/}{${\rm x2f_mpi}$}} \cite{x2fmpi2006} and 
-studied for the numerical simulations of a two-dimensional gaseous detonation wave propagation process 
-in \citet{Dong2007,Dong2009,WuDongLi2018}. 
+the software \texttt{\href{https://tcg.mae.cornell.edu/x2f\_mpi/}{${\rm x2f_mpi}$}} \cite{x2fmpi2006} 
+and studied for the numerical simulations of a two-dimensional gaseous detonation wave propagation 
+process in \citet{Dong2007,Dong2009,WuDongLi2018}. 
 
 %---------------------------------------------------------------------------------------------------%
 In addition to the ISAT approach, several alternative storage-based approaches have been suggested in 
@@ -318,15 +327,15 @@ values given in the input).
 The work \cite{Laloy2019} presents a comparison of several approaches 
 (Gaussian processes (GP), polynomial chaos expansion (PCE) and deep neural networks (DNNs)), which are 
 used to emulate CPU-intensive reactive transport models. However, considered methods are subjected 
-to uncertainties propagation and, as result, deteriorating accuracy. For relatively simple problems 
+to uncertainties propagation and, as the result, deteriorating accuracy. For relatively simple problems 
 DNNs performed the best (even having relatively small training sets), providing the most accurate 
 representation of results. However, the DNN approach leads to the worst solution of the considered 
 synthetic inverse problem due to the small but rather complicated deterministic noise that affects 
 the DNN-based predictions. Also, for more complicated problems DNN produces quite disperse outputs, 
 which only confirms the difficulty of finding emulator able to replace the entire reactive transport 
 process with all its complex behaviours and possible outcomes. The approach proposed in our work 
-focuses only of speeding up the chemical part of the entire simulation, which narrows down the amount 
-of physical effects influencing the input space and, as results, allows to find more similarities 
+focuses only on speeding up the chemical part of the entire simulation, which narrows down the number 
+of physical effects influencing the input space and, as results, allows finding more similarities 
 triggering more smart predictions.
 %
 Moreover, unlike the ``black-box'' representation of the complex original model used by methods in 
@@ -336,13 +345,13 @@ the requested accuracy of simulations' results.
 
 %---------------------------------------------------------------------------------------------------%
 The \emph{on-demand learning approach} developed here exhibits several advantages over conventional 
-statistics- or neural network- based machine learning methods. Firstly, the use of \emph{sensitivity 
+statistics- or neural network-based machine learning methods. Firstly, the use of \emph{sensitivity 
 derivatives} of the calculated equilibrium states results in a method that better reflects the behavior 
 of chemical systems and how they react to subsequent changes in input equilibrium conditions. Secondly, 
-the use of these sensitivity derivatives permits predicting new equilibrium states \emph{without loss 
-of accuracy and confidence}. Thirdly, the proposed method requires \emph{no a priori statistical 
+the use of these sensitivity derivatives permits predicting new equilibrium states \emph{without a 
+loss of accuracy and confidence}. Thirdly, the proposed method requires \emph{no a priori statistical 
 training} before it can be applied in a reactive transport simulation. Its on-demand machine learning 
-characteristics enables spontaneous learning of only what is needed to be calculated anew during 
+characteristics enable spontaneous learning of only what is needed to be calculated anew during 
 a reactive transport simulation to keep new predictions accurate enough. Note that, when using 
 a conventional chemical equilibrium calculation approach, these computations are needed anyway. 
 
@@ -362,12 +371,12 @@ Finally, the smart chemical equilibrium algorithm produces output speciations th
 satisfy conservation conditions} for chemical elements and electric charge, as these constraints are 
 incorporated into the calculation of the sensitivity derivatives (see \citet{Leal2017}). This, in 
 particular, distinguishes the discussed method from the statistics-based machine learning methods, 
-which can loose precision or fail in this respect.
+which can lose precision or fail in this respect.
 
 Some similarities may inevitably exist between the \emph{on-demand machine learning} (ODML)
 algorithm and other existing strategies for speeding up chemical equilibrium 
 and\slash or chemical kinetics calculations. Existing techniques, for example, that 
-rely on interpolation, may also require search operations and decision making weather 
+rely on interpolation, may also require search operations and decision making whether 
 to accept or not the interpolated estimate. However, the major current (and also future) 
 differences are that ODML
 %
@@ -403,21 +412,29 @@ specifically carried out towards achieving the planned algorithm's goals.
 
 This report is organized as follows:
 \begin{enumerate}[wide, labelwidth=!, labelindent=0pt]
-\item [{Section~\ref{sec:Definitions-and-Notation}}] introduces definitions and the notation needed 
-to describe the algorithm.
-\item [{Section~\ref{sec:Method}}] formulates the smart chemical equilibrium algorithm with details 
-regarding the learning and prediction operations.
-\item [{Section~\ref{sec:Results}}] demonstrates the performance and accuracy of a reactive transport 
-simulation, using the smart chemical equilibrium / kinetics algorithms. It consists of three part 
+\item [{\bf Section~\ref{sec:Definitions-and-Notation}}] introduces definitions and the notation 
+needed to describe the algorithm.
+\item [{\bf Section~\ref{sec:Method}}] formulates the smart chemical equilibrium and kinetics 
+algorithms with details regarding the learning and prediction operations.
+\item [{\bf Section~\ref{sec:Results}}] demonstrates the performance and accuracy of a reactive 
+transport simulation, using the smart chemical equilibrium and kinetics algorithms. 
+%
+\sveta{
+It consists of three parts 
 with results corresponding to three major stages of development of smart algorithm. The first tests
-of the algorithm were focused on studying its performance in RT model with all the species controlled
-by equilibrium and with Pitzer activity model used (see Subsection \ref{subsec:part-1}). Subsection
-\ref{subsec:part-2} is dedicated to describe the performance of smart approach on the chemical system 
-with kinetically controlled species. Finally, Subsection \ref{subsec:part-3} highlights results of 
-RT simulations obtained after coupling Reaktoro to the Firedrake, an automated system for the solution 
-of partial differential equations using the finite element method (FEM) \cite{Rathgeber2016}. 
-\item [{Section~\ref{sec:Discussion-and-Conclusions}}] discusses implications and conclusions of 
-this report together with a road-map for further research efforts in this direction.
+of the algorithm were focused on studying its performance in the reactive transport model with all 
+the species controlled
+by equilibrium and with Pitzer activity model used (see Subsection \ref{subsec:part-1}). 
+%
+Subsection \ref{subsec:part-2} is dedicated to describing the performance of the smart approach on 
+the chemical system with kinetically controlled species. 
+%
+Finally, Subsection \ref{subsec:part-3} highlights results of reactive transport simulations 
+obtained after coupling \texttt{Reaktoro} with \texttt{Firedrake}, an automated system for the 
+solution of partial differential equations using the finite element method (FEM) \cite{Rathgeber2016}.
+}
+\item [{\bf Section~\ref{sec:Discussion-and-Conclusions}}] discusses implications and conclusions of 
+this report together with a detailed road-map for further research efforts in this direction.
 \end{enumerate}
 
 
@@ -454,20 +471,22 @@ where $A$ is the \emph{formula matrix} of the chemical system \citep{Smith1982} 
 are $\mathrm{E}\times\mathrm{N}$), with $A_{ji}$ denoting the coefficient of the $j$th element in 
 the $i$th species.
 
-In order to consider system with kinetically controlled species, we assume the partition of the 
-speciation to equilibrium and the kinetic species with corresponding amounts 
-$n_{e} \in \mathbb{R}^{N_e}$ and $n_{k} \in \mathbb{R}^{N_k} $ and bulk compositions 
-$b_{e}, b_{k} \in \mathbb{R}^{E}$. Then, the total amount of chemical species is presented as 
+\sveta{
+In order to consider a system with kinetically controlled species, we assume the partition of the 
+speciation to equilibrium and kinetic species with corresponding amounts 
+$n_{e} \in \mathbb{R}^{{\rm N}_e}$ and $n_{k} \in \mathbb{R}^{{\rm N}_k}$, where 
+${\rm N} = {\rm N}_e \cup {\rm N}_k$, and corresponding elements compositions 
+$b_{e}, b_{k} \in \mathbb{R}^{\rm E}$. Then, the total amount of chemical species is presented as 
 \[
-n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix} \in \mathbb{R}^{N}
+n=\begin{bmatrix}n_{e}\\n_{k}\end{bmatrix} \in \mathbb{R}^{\rm N}
 \]
-with the formula matrix $A=\begin{bmatrix}A_{e}\,A_{k}\end{bmatrix}$ composed of 
+with the formula matrix $A=\begin{bmatrix}A_{e}\;A_{k}\end{bmatrix}$ composed of 
 matrices of the equilibrium and kinetic species $A_{e}$ and $A_{k}$, respectively. 
-
+}
 %---------------------------------------------------------------------------------------------------%
 \section{Method\label{sec:Method}}
 
-Let the dependence of $n_{e}$ from $b_{e}$ is prescribed by the abstract chemical equilibrium function 
+Let the dependence of $n_{e}$ from $b_{e}$ be prescribed by the abstract chemical equilibrium function 
 %
 \begin{equation}
 n_{e}=\varphi(b_{e}),\varphi:\mathbb{R}^{E}\rightarrow\mathbb{R}^{N},
@@ -496,13 +515,14 @@ The \emph{chemical potential} of the $i$th species $\mu_{e, i}=\mu_{e, i}(T,P,n_
 with $R$ denoting the universal gas constant, $\mu_{e, i}^{\circ}=\mu_{e, i}^{\circ}(T,P)$ the 
 \emph{standard chemical potential} of the $i$th species, and $a_{e, i}=a_{e, i}(T,P,n_e)$ the 
 \emph{activity} of the $i$th species. Methods for solving chemical equilibrium problem using either 
-Gibbs energy minimization (GEM) or law of mass action (LMA) methods are addressed in 
+Gibbs energy minimization (GEM) or the law of mass action (LMA) methods are addressed in 
 Appendix~\ref{subsec:Chemical-equilibrium-equations} or with more detail in 
 \citet{Leal2016a,Leal2016c,Leal2017} and references therein.
 
+\sveta{
 %---------------------------------------------------------------------------------------------------%
 The amounts of the kinetic species $n_{k}$ are governed by the system of ordinary differential 
-equations
+equations (ODEs)
 %
 \begin{equation}
 \begin{array}{r@{$\;$}l@{$\quad$}l}
@@ -514,15 +534,15 @@ equations
 %
 %---------------------------------------------------------------------------------------------------%
 where $r$ are the \emph{rates} of the kinetically controlled reactions,  $q_{k}$ denotes 
-the \emph{vector of inflow/outflow} rates of the kinetic species, and $n_{k}^{\circ}$ 
+the \emph{vector of inflow/outflow} rates of the kinetic species, and $n_{k}^{\circ}$ is
 the \emph{initial amounts} of the kinetic species. 
 
-{\bf Note}: To make explanation more transparent, we consider a simplified version of system of ODEs 
-(Eq.~\eqref{eq:kinetics}) that govern kinetically controlled species. For more detailed derivation 
-of the differential-algebraic system that governs \emph{chemical state of a system}, we refer to 
-Appendix~\ref{subsec:Chemical-kinetics-equations} or previous works \citet{Leal2015,Leal2017} and 
-references therein.
-
+{\bf Note}: To make the explanation more transparent, in Eq.~\eqref{eq:kinetics} we consider a 
+simplified version of the system of ODEs that govern kinetically controlled species. For a more 
+detailed derivation of the differential-algebraic system to describe the \emph{chemical state of a 
+system}, we refer to Appendix~\ref{subsec:Chemical-kinetics-equations} or previous works 
+\citet{Leal2015,Leal2017} and references therein.
+}
 
 \subsection{First-Order Taylor Approximation\label{subsec:First-order-Taylor-approximation}}
 
@@ -551,19 +571,22 @@ temperature, pressure, and\slash or amounts of elements, and, therefore, quickly
 estimate entirely new states in the vicinity of some previous and fully calculated chemical 
 equilibrium state.
 
+\sveta{
 %---------------------------------------------------------------------------------------------------%
-In case, of kinetically controlled species similar logic can be applied. We use the sensitivities 
-of species $n_k$ w.r.t. the small perturbation in initial condition $n_k^\circ$ defined as
+In case of kinetically controlled species, the similar approach can be applied. We use 
+the sensitivities of species $n_k$ with respect to the small perturbation in the initial condition 
+$n_k^\circ$ defined as
 %
 \[
 \frac{\partial n_k}{\partial n_k^\circ}. 
+\label{eq:sensitivities}
 \]
 %
 %---------------------------------------------------------------------------------------------------%
 Let $\Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be stored along with $n^\star_k$ 
-as a result of numerical integration of the system \eqref{eq:kinetics} with initial state 
-$\big(n^\circ_k\big)^\star$. Then, evaluating new chemical state the initial condition $n^\circ_k$, 
-the kinetic species can be approximated as follow:
+(result of numerical integration of the system defined by Eq.~\eqref{eq:kinetics}) and the initial 
+state $\big(n^\circ_k\big)^\star$. Then, instead of evaluating new chemical state with the initial 
+condition $n^\circ_k$, the kinetic species can be approximated as follows:
 %
 \begin{equation}
 \bar{n}_k 
@@ -573,9 +596,10 @@ the kinetic species can be approximated as follow:
 \label{eq:smart-estimate-kinetics}
 \end{equation}
 %
-If $\bar{n}_k$ is accurate enough, the complex numerical integration of the system 
+If $\bar{n}_k$ is accurate enough, the computationally costly numerical integration of the system 
 \eqref{eq:kinetics} is replaced by matrix-vector multiplication formula 
 \eqref{eq:smart-estimate-kinetics}. 
+}
 
 \begin{comment}
 % more detailed explanation
@@ -626,13 +650,14 @@ Let
 \begin{equation}
 \mathcal{I}_e =\left\{ (T^{i},P^{i},b_e^{i})\right\}_{i=1}^{{\rm I}} 
 \qquad \mbox{and} \qquad 
-\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{{\rm J}}.
+\mathcal{I}_k =\left\{ (n^{\circ}_k)^j \right\}_{j=1}^{{\rm J}}
 \end{equation}
 %
-represent the sets of input conditions for the chemical equilibrium and kinetics problems that 
-have been fully solved (i.e., using the chemical equilibrium function $\varphi$ or system of ODEs 
-\eqref{eq:kinetics}).
+represent the sets of input conditions for the chemical equilibrium and kinetics problems, 
+respectively, that have been fully solved (i.e., using the chemical equilibrium function $\varphi$ 
+or system of ODEs \eqref{eq:kinetics}).
 %
+\sveta{
 %---------------------------------------------------------------------------------------------------%
 Furthermore, let 
 %
@@ -643,14 +668,15 @@ d^{i}_e = \left[
 +\sum_{l=1}^{{\rm E}}\left(b_{l}-b_{l}^{i}\right)^{2}\right]^{\frac{1}{2}} 
 \qquad \mbox{and} \qquad 
 d^{j}_k = \left[ \sum_{m=1}^{{\rm N_k}} 
-\left((n^\circ_{k, m})^{\,j} - n^\circ_{k, m}\right)^2 \right]^{\frac{1}{2}} 
+n^\circ_{k, m} - \left((n^\circ_{k, m})^{\,j}\right)^2 \right]^{\frac{1}{2}} 
 \end{equation}
 %
 denote the Euclidean distances either from $(T, P, b_e)^i$ to $(T,P,b)$ or from 
 $(n^\circ_{k})^{\,j}$ to $n^\circ_{k}$. In $d^{i}_e$, the input condition of the $i$th fully 
 solved problem and the given input condition for the new equilibrium calculation are compared, 
 whereas $d^{j}_k$ measures the distance between the initial condition of $j$th fully integrated 
-problem and the initial condition of new kinetic problem.
+problem and the initial condition of new one.
+}
 
 \textbf{Note:} Other norms can be used to define the distance measure
 above and other search operations can be equally considered (not necessarily
@@ -886,7 +912,7 @@ open-source finite element library Firedrake that is used to model transport aft
 reactive transport equation. For details on how we solve the reactive transport equations, see 
 Appendix~\ref{sec:Reactive-Transport-Equations}.
 
-\subsection{Reactive Transport Problem\label{subsec:Reactive-Transport-Problem}}
+\subsection*{Reactive Transport Problem\label{subsec:Reactive-Transport-Problem}}
 
 %---------------------------------------------------------------------------------------------------%
 The reactive transport modeling example carried out in this work is illustrated in 
@@ -1065,8 +1091,8 @@ get up till 16~\% in several cells throughout simulation.
 
 \begin{figure}[!ht]
 \begin{centering}
-\includegraphics[width=0.7\textwidth]{figures/equilibrium/on-demand-learning-countings} \\
-\includegraphics[width=0.7\textwidth]{figures/equilibrium/on-demand-learning-total}
+\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-countings} \\
+\includegraphics[width=0.6\textwidth]{figures/equilibrium/on-demand-learning-total}
 \par\end{centering}
 \caption{\label{fig:number-training-1}
 The number of \emph{on-demand learning} operations triggered by the smart chemical equilibrium 
@@ -1180,7 +1206,7 @@ continue to increase. This most certainly implies the importance of the use of t
 (such as kd-tree or locally sensitive hashing tables) that would allow to maintain the costs of 
 retrieval algorithm constant and amenable. 
 %
-{\color{blue}
+\sveta{
 In order to further improve search times, previously stored learned problems could also be ranked, 
 so that those that have not had much use for quickly predicting new states are purged from the 
 database eventually. The chemical state most often used for smart prediction will have higher rank
@@ -1224,9 +1250,10 @@ Next, let us consider the performance of the smart chemical kinetics algorithm.
 %---------------------------------------------------------------------------------------------------%
 The on-demand learning for chemical equilibrium algorithm, discussed in the details in Subsection 
 \ref{subsec:part-1}, is heavily used in the simulations of kinetically controlled species. 
-We clarify the steps of the ODML algorithm for chemical kinetics below for each RT step 
-$[t_k, t_{k+1}], k = 1, \ldots {\rm K}$:
+We clarify the steps of the ODML algorithm for chemical kinetics for each reactive transport 
+step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$ in Algorithm \ref{eq:kinetics-algorithm}.
 %
+\begin{comment}
 \begin{itemize} 
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
 \item Transport generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells.
@@ -1241,20 +1268,20 @@ empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles
 %
 \item Combine the species amounts $n = [n_k; n_e]$.
 \end{itemize}
+\end{comment}
 
 \begin{figure}[!t]
 \begin{centering}
 \includegraphics[width=0.7\textwidth]{figures/kinetics/algorithm.png}
 \par\end{centering}
 \caption{\label{fig:kinetics-algorithm}. 
-The ODML algorithm for chemical kinetics on the reactive step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$.}
+The ODML algorithm for chemical kinetics on the reactive step $[t_k, t_{k+1}], k = 1, \ldots, {\rm K}$.}
 \end{figure}
 
 \begin{algorithm}[H]
 \SetAlgoLined
-\KwResult{species amounts $n$ on the reactive transport step $[t_k, t_{k+1}], k = 1, \ldots {\rm K}$}
- initialization\;
- transport generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells\;
+\KwResult{species amounts $n$ on the step $[t_k, t_{k+1}], k = 1, \ldots, {\rm K}$}
+  transport generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells\;
  \For{each cell}{
   Evolve kinetics species $n_k$ by smart kinetics algorithm (see Figure \ref{fig:kinetics-algorithm}) 
 using either {on-demand learning / training / full system of ODEs integration} (which corresponds to 
@@ -1262,51 +1289,9 @@ empty circles {\large $\fullmoon$}) or {prediction / estimation} (filled circles
   Update equilibrium species $n_e$\;
   Combine the species amounts $n = [n_k; n_e]$\;
  }
- \caption{The ODML algorithm for chemical kinetics below for each RT step.}
+\caption{The ODML algorithm for chemical kinetics for each reactive transport step.}
+\label{eq:kinetics-algorithm}
 \end{algorithm}
-
-
-\begin{comment}
-
-\begin{algorithm}[!t]
-\begin{algorithmic} 
-\small
-\STATE {{\bf Input:}}
-$[t_k, t_{k+1}], k = 1, \ldots {\rm K}$ \COMMENT{reactive transport time step} \\[4pt]
-\qquad \quad \, $b_j$, $j = 1, ..., {\rm J}$ \COMMENT{amounts of elements} \\[4pt]
-% 
-\STATE {{\bf TRANSPORT}}: \\[4pt]
-\begin{itemize}
-\item generates $n^\circ = [n^\circ_k; n^\circ_e]$ for all cells $i_{cell} = 1, \ldots, 100$\\[4pt]
-\end{itemize}
-%
-%
-\FOR {$n = 1$ {\bf to} $N^{\rm it}_{\rm maj}$}
-\STATE {{\bf {CHEMISTRY}}}: 
-\begin{itemize}
-\item {  compute} $fff $\\[4pt]
-%
-\item {  compute} $fff $ \\[4pt]
-%
-\item {  compute} $ff $ \\[4pt]
-%
-%
-\end{itemize}
-\STATE{{\bf MARK}}: Using the marking criteria ${M}_*(\sigma)$, select elements $K$ of the mesh 
-$\mathcal{K}_h$ that must be refined \\[4pt]
-%using 
-%$\mdI{} (u_h)$. \\[4pt]
-%
-\STATE {{\bf REFINE}}: Execute the refinement strategy:  
-$\mathcal{K}_{h_{\rm ref}} = \mathcal{R}(\mathcal{K}_h)$ \\[4pt]
-%
-\STATE {{\bf Output:}} $\mathcal{K}_{h_{\rm ref}}$ \COMMENT{refined discretization of $Q$}
-\end{algorithmic}
-\caption{\small Reconstruction of $u_h$ (a single refinement step)}
-\label{alg:reliable-uh-reconstruction}
-\end{algorithm}
-
-\end{comment}
 
 %
 %---------------------------------------------------------------------------------------------------%
@@ -1362,8 +1347,8 @@ The specific surface area of calcite is set to be 5000~${\rm {cm^2}/{g}}$.
 %
 \begin{figure}[!t]
 \centering
-\subfloat[]{\includegraphics[width=0.45\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics/calcite-dolomite-6}\label{fig:minerals-1}}
+\subfloat[]{{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics/calcite-dolomite-6}\label{fig:minerals-1}}}
 \subfloat[]{\includegraphics[width=0.46\textwidth, 
 trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics/aqueous-species-6}\label{fig:aqueous-1}} \\[-10pt]
 %
@@ -1460,7 +1445,7 @@ on-demand learning operations both in kinetics and equilibrium.
 \begin{centering}
 \subfloat[Number of on-demand learnings for kinetic species]{
 \includegraphics[width=0.6\textwidth, 
-trim={0.0cm 1cm 0.5cm 0cm}, clip]{figures/kinetics/on-demand-learning-countings}} \\
+trim={0.0cm 1cm 0.5cm 0cm}, clip]{figures/kinetics/on-demand-learning-countings}} \\[-2pt]
 \subfloat[Number of on-demand learnings for equilibrium species]{
 \includegraphics[width=0.6\textwidth, 
 trim={0.0cm 1cm 0.5cm 0cm}, clip]{figures/kinetics/on-demand-learning-countings-equilibrium}
@@ -1483,7 +1468,7 @@ allowing 99.90\% of the discretization cells to be predicted in a quick way.}
 \begin{figure}[!t]
 \begin{centering}
 \subfloat[The ODML applied for kinetics only]{
-\includegraphics[width=0.6\textwidth]{figures/kinetics-only/computing-costs} \label{fig:computational-cost-kinetics-1}} \\
+\includegraphics[width=0.6\textwidth]{figures/kinetics-only/computing-costs} \label{fig:computational-cost-kinetics-1}} \\[-2pt]
 \subfloat[The ODML applied for both kinetics and equilibrium]{
 \includegraphics[width=0.6\textwidth]{figures/kinetics/computing-costs}
 \label{fig:computational-cost-kinetics-2}}
@@ -1576,7 +1561,7 @@ speed-up is around 100.
 \begin{centering}
 \subfloat[The ODML applied for kinetics only]{
 \includegraphics[width=0.66\textwidth]{figures/kinetics-only/speedups}
-\label{fig:speedup-with-and-without-search-costs-kinetics-1}} \\
+\label{fig:speedup-with-and-without-search-costs-kinetics-1}} \\[-2pt]
 \subfloat[The ODML applied for both kinetics and equilibrium]{
 \includegraphics[width=0.6\textwidth]{figures/kinetics/speedups}
 \label{fig:speedup-with-and-without-search-costs-kinetics-2}}
@@ -1729,7 +1714,7 @@ Ca$^{2+}$, Mg$^{2+}$, and HCO$_3^{-}$ ion concentrations, as well as CO$_2$(aq) 
 \begin{figure}[!t]
 \begin{centering}
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/minerals-0s.png}}\quad
-\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/minerals-2s.png}}\\[5pt]
+\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/minerals-2s.png}}\\[-5pt]
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/minerals-5s.png}}\quad
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/minerals-7s.png}}
 \par\end{centering}
@@ -1742,7 +1727,7 @@ of Dolomite, and grey defines the regions of the rock with only Quartz.}
 \begin{figure}[!t]
 \begin{centering}
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 1cm 0 0, clip]{figures/rok/ca-ion.png}}\quad
-\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 1cm 0 0, clip]{figures/rok/magnesium-ion.png}}\\[5pt]
+\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 1cm 0 0, clip]{figures/rok/magnesium-ion.png}}\\[-5pt]
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 1cm 0 0, clip]{figures/rok/hco3-ion.png}}\quad
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 1cm 0 0, clip]{figures/rok/co2-aq.png}}
 \par\end{centering}
@@ -1760,7 +1745,7 @@ in porosity by 1.5 \%, from the initial value 1.1009 (see Figure \ref{fig:rok-po
 \begin{figure}[!t]
 \begin{centering}
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/porosity-0s.png}}\quad
-\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/porosity-2s.png}}\\[5pt]
+\subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/porosity-2s.png}}\\[-5pt]
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/porosity-5s.png}}\quad
 \subfloat[]{\includegraphics[width=0.45\textwidth, trim= 0 3cm 0 0, clip]{figures/rok/porosity-7s.png}}
 \par\end{centering}
@@ -1876,6 +1861,7 @@ However, modelling reactive systems is numerically expensive since the non-linea
 
 Strategies to reduce the numerical effort to solve reactive flows include chemistry tabulation. Chemistry tabulation basically means that the solution of the given inital value problem (initial compostion, temperature, pressure) is stored. Subsequently, if similar starting values occur, the stored results are retrived and interpolated according to the differences in the starting values. These tabulation strategies differ depending on the employed combustion model. Some tabulation methods construct the tabulation on a predefined grid in the composition space, while others construt the tables "in-situ" during simulation run time.
 
+Comment on the chemical properties evaluation.
 
 \end{comment}
 
