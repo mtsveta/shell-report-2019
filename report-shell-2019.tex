@@ -526,7 +526,7 @@ that encapsulates the specific algorithmic steps to solve the fundamental Gibbs 
 problem
 %
 \[
-\varphi(b_{e}):={\rm argmin}_{n_{e}} G_{e} = n_{e}^{T} \mu_{e}
+\varphi(b_{e}):={\rm argmin}_{n_{e}} G_{e} = n_{e}^{\rm T} \mu_{e}
 \quad\mbox{s.t.}\quad
 \begin{cases}
 A_{e} \, n_{e} & =b_{e}\\
@@ -555,7 +555,7 @@ equations (ODEs)
 %
 \begin{equation}
 \begin{array}{r@{$\;$}l@{$\quad$}l}
-	\frac{dn_{k}}{dt} & = r(n_{k}) + q_{k} & t>0,\\
+	\frac{\partial n_{k}}{\partial t} & = \nu_{k}^{\rm T} \,r(n_{k}) + q_{k} & t>0,\\
                 n_{k} & = n_{k}^{\circ}    & t=0,
 \end{array}
 \label{eq:kinetics}
@@ -563,14 +563,16 @@ equations (ODEs)
 %
 %---------------------------------------------------------------------------------------------------%
 where $r$ are the \emph{rates} of the kinetically controlled reactions,  $q_{k}$ denotes 
-the \emph{vector of inflow/outflow} rates of the kinetic species, and $n_{k}^{\circ}$ is
-the \emph{initial amounts} of the kinetic species. 
+the \emph{vector of inflow/outflow} rates of the kinetic species, $n_{k}^{\circ}$ is
+the \emph{initial amounts} of the kinetic species, and $\nu_{k}$ is matrices formed from 
+the columns of the stoichiometric matrix $\nu=\begin{bmatrix}\nu_{e}\,\nu_{k}\end{bmatrix}$.
 
 {\bf Note}: To make the explanation more transparent, in Eq.~\eqref{eq:kinetics} we consider a 
-simplified version of the system of ODEs that govern kinetically controlled species. For a more 
-detailed derivation of the differential-algebraic system to describe the \emph{chemical state of a 
-system}, we refer to Appendix~\ref{subsec:Chemical-kinetics-equations} or previous works 
-\citet{Leal2015,Leal2017} and references therein.
+simplified version of the system of ODEs presented in Eq.~\eqref{eq:kinetics-full} that govern 
+kinetically controlled species. For a more detailed derivation this differential-algebraic system 
+for the \emph{chemical state of a system}, we refer to 
+Appendix~\ref{subsec:Chemical-kinetics-equations} or previous works \citet{Leal2015,Leal2017} and 
+references therein.
 }
 
 \subsection{First-Order Taylor Approximation\label{subsec:First-order-Taylor-approximation}}
@@ -609,12 +611,13 @@ the sensitivities of species $n_k$ with respect to the small perturbation in the
 $n_k^\circ$ defined as
 %
 \[
-\frac{\partial n_k}{\partial n_k^\circ}. 
+S(t) := \frac{\partial n_k}{\partial n_k^\circ} (t). 
 \label{eq:sensitivities}
 \]
 %
 %---------------------------------------------------------------------------------------------------%
-Let $\Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be stored along with $n^\star_k$ 
+Let 
+$S^\star = \Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be stored along with $n^\star_k$ 
 (result of numerical integration of the system defined by Eq.~\eqref{eq:kinetics}) and the initial 
 state $\big(n^\circ_k\big)^\star$. Then, instead of evaluating new chemical state with the initial 
 condition $n^\circ_k$, the kinetic species can be approximated as follows:
@@ -622,57 +625,25 @@ condition $n^\circ_k$, the kinetic species can be approximated as follows:
 \begin{equation}
 \bar{n}_k 
 = n^\star_k + \delta n_k
+= n^\star_k + S^\star \, \delta n^\circ_k
 = n^\star_k + \Big(\frac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
-\big(n^\circ_k - (n^\circ_k)^\star \big)
+\big(n^\circ_k - (n^\circ_k)^\star \big).
 \label{eq:smart-estimate-kinetics}
 \end{equation}
 %
 If $\bar{n}_k$ is accurate enough, the computationally costly numerical integration of the system 
 \eqref{eq:kinetics} is replaced by matrix-vector multiplication formula 
-\eqref{eq:smart-estimate-kinetics}. 
-}
-
-\begin{comment}
-% more detailed explanation
-
-%---------------------------------------------------------------------------------------------------%
-In case, of kinetically controlled species similar logic can be applied. We introduce the property 
-that measures how sensitive species $n_k$ w.r.t. the choice of initial condition $n_k^\circ$. It is
-called \emph{sensitivity} and defined as
-%
-\[
-s(t) := \frac{\partial n_k}{\partial n_k^\circ}(t). 
-\]
-%
-%---------------------------------------------------------------------------------------------------%
-Let $s^\star = \Big(\tfrac{\partial n_k}{\partial n_k^\circ}\Big)^\star$ be evaluated and stored 
-along with $n^\star_k$ after numerical integration has been performed with initial state 
-$\big(n^\circ_k\big)^\star$. Then, provided with a new initial condition for the kinetic species 
-$n^\circ_k$, $\bar{n}_k$ can be approximated as follow:
-%
-\begin{equation}
-\bar{n}_k 
-= n^\star_k + \delta n_k
-= n^\star_k + s^\star \, \delta n^\circ_k 
-= n^\star_k + \Big(\tfrac{\partial n_k}{\partial n_k^\circ} \Big)^\star \, 
-\big(n^\circ_k - (n^\circ_k)^\star \big)
-\label{eq:smart-estimate-kinetics}
-\end{equation}
-%
-Analogously to Eq. \ref{eq:smart-estimate}, the complex numerical integration of the system 
-\eqref{eq:kinetics} is replaced by matrix-vector multiplication formula 
-\eqref{eq:smart-estimate-kinetics}. Here, sensitivity is a matrix $s\in\mathbb{R}^{N\times N}$ that 
-satisfies the following system of ODEs
+\eqref{eq:smart-estimate-kinetics}. Here, sensitivities are defined by the matrix 
+$S \in \mathbb{R}^{{\rm N}_k \times {\rm N}_k}$ that satisfies the following system of ODEs
 % 
 \begin{align*}
-\frac{d s}{dt} & = J_r (n) \, s & t>0,\\
-             s & = I            & t=0,
+\frac{\partial S}{\partial t} & = J_r (n_k) \, S & t>0,\\
+             S & = I            & t=0,
 \end{align*}
 %
 where ${J}_{r}$ is a Jacobian of $r(n_k)$, and ${I} \in \mathbb{R}^{N \times N}$ is the identity 
 matrix.
-\end{comment}
-
+}
 %---------------------------------------------------------------------------------------------------%
 \subsection{Nearest Neighbor Search\label{subsec:Nearest-Neighbor-Search}}
 
@@ -1390,7 +1361,22 @@ $\log k_{i}^{\circ} = -5.81~\mathrm{{mol}/{m^2\,s}}$, \;$E_i$ = 23.5 $\mathrm{{k
 for the neutral mechanism, 
 $\log k_{i}^{\circ} = -0.30~\mathrm{{mol}/{m^2\,s}}$, \;$E_i$ = 14.4 $\mathrm{{kJ}/{mol^4}}$, 
 $a[{\rm H}^+]$ = 1.0.
-The specific surface area of calcite is set to be 5000~${\rm {cm^2}/{g}}$. 
+The specific surface area of calcite is set to be 5000~${\rm {cm^2}/{g}}$. In the code (C++), 
+this properties can be set in the way illustrated in Listing \ref{lst:calcite}.
+
+\begin{lstlisting}[language=C++, caption=Parameters of the rate model for Calcite, label=lst:calcite]
+MineralReaction reaction = editor.addMineralReaction("Calcite");
+    reaction.setEquation("Calcite = Ca++ + CO3--");
+    reaction.addMechanism("logk = -5.81 mol/(m2*s); Ea = 23.5 kJ/mol"); // neutral
+    reaction.addMechanism("logk = -0.30 mol/(m2*s); Ea = 14.4 kJ/mol; a[H+] = 1.0"); // acidic
+    reaction.setSpecificSurfaceArea(5000, "cm2/g");
+\end{lstlisting}
+
+{\bf Note:} Currently, the specific surface area is a part of the mineral reaction (see Listing 
+\ref{lst:calcite}). However, 
+we plan to decouple it from the reaction definition, as it may change from one cell to another, 
+depending on the mineral dissolution and precipitation. In the future, the specific surface 
+will be included to the properties of the chemical state.
 
 \subsubsection{Smart Prediction Analysis
 \label{subsec:Performance-and-Accuracy-Kinetics}}
@@ -1737,10 +1723,10 @@ p &\: = p_D \quad \mbox{on} \quad \Gamma_,\\
 %
 %---------------------------------------------------------------------------------------------------%
 Let Dirichlet part of the boundary $\Gamma_D$ coincide with the left and right face of the rock, 
-assuming $p_{\rm L} = 10100$~Pa and $p_{\rm R} = 10^5$~Pa. Then, the Neumann part will correspond 
-to the top and the bottom with $\boldsymbol{v}|_{\rm T} \cdot \boldsymbol{n}_{\rm T}$ = 
-$\boldsymbol{v}|_{\rm B} \cdot \boldsymbol{n}_{\rm B} = u_D = 0$, where $\boldsymbol{n}_{\rm T}$ and
-$\boldsymbol{n}_{\rm T}$ are outward unit normal vectors on the top and bottom surface of the rock.
+assuming $p_{L} = 10100$~Pa and $p_{R} = 10^5$~Pa. Then, the Neumann part will correspond 
+to the top and the bottom with $\boldsymbol{v}|_{T} \cdot \boldsymbol{n}_{T}$ = 
+$\boldsymbol{v}|_{B} \cdot \boldsymbol{n}_{B} = u_D = 0$, where $\boldsymbol{n}_{T}$ and
+$\boldsymbol{n}_{T}$ are outward unit normal vectors on the top and bottom surface of the rock.
 %---------------------------------------------------------------------------------------------------%
 To solve the Darcy system for the velocity and pressure variables the Stabilized Dual Hybrid Mixed 
 (SDHM) method \citep{Nunezetal2012} is considered. 
@@ -2046,12 +2032,12 @@ and $R$ represents the \emph{reaction operator}. According to the first order sp
 the solution advances from the time $t_{0}$ for a small time step $\Delta t$ in the following order:
 %
 \begin{itemize}
-\item solve transport equation, such that the solution denoted by $\overline{n}$;
+\item solve transport equation, such that the solution denoted by $\overline{n}$:
 %
 \begin{equation}
 \begin{cases}
-\frac{\partial n}{\partial t} &= T(n)  \qquad  t > 0, \\
-              n &= n_{0} \qquad \quad t = t_{0},
+&\frac{\partial n}{\partial t} = T(n)  \qquad  t > 0, \\
+&                           \;\; n = n_{0} \qquad \quad t = t_{0},
 \end{cases}
 \label{eq:transport}
 \end{equation}
@@ -2060,8 +2046,8 @@ the solution advances from the time $t_{0}$ for a small time step $\Delta t$ in 
 %
 \begin{equation}
 \begin{cases}
-\frac{\partial n}{\partial t} & =R(n) \qquad  t > 0, \\
-n(t_{0}) & = {\overline{n}}\qquad \quad t = t_{0}.
+&\frac{\partial n}{\partial t} = R(n) \qquad  t > 0, \\
+& \;\;\: n = {\overline{n}}\qquad \quad \; t = t_{0}.
 \end{cases}
 \label{eq:reaction}
 \end{equation}
@@ -2087,35 +2073,28 @@ ${\rm N}^{\rm f}$ and ${\rm N}^{\rm s}$ are the numbers of fluid and solid speci
 Note that the above equations assume a single fluid phase and common diffusion coefficients for all 
 fluid species.
 
+%---------------------------------------------------------------------------------------------------%
 By partitioning the species as fluid and solid species, the formula matrix $A$ can be conveniently 
 represented as 
 %
 $A=\begin{bmatrix}A^{\rm f} & A^{\rm s}\end{bmatrix},$
 %
-where $A^{\rm f}$ and $A^{\rm s}$ are the formula matrices
-of the fluid and solid partitions (i.e., the matrices constructed
-from the columns of $A$ corresponding to fluid and solid species).
-The concentrations of elements in both fluid and solid partitions
-$b_{j}^{\rm f}$ and $b_{j}^{\rm s}$ can then be calculated
-from the species concentrations in the same partition using 
+where $A^{\rm f}$ and $A^{\rm s}$ are the formula matrices of the fluid and solid partitions (i.e., 
+the matrices constructed from the columns of $A$ corresponding to fluid and solid species).
+The concentrations of elements in both fluid and solid partitions $b_{j}^{\rm f}$ and $b_{j}^{\rm s}$ 
+can then be calculated from the species concentrations in the same partition using 
 %
 \begin{alignat}{2}
 b_{j}^{\rm f} & =\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}n_{i}^{\rm f} \quad \mbox{and} \quad 
 b_{j}^{\rm s} =\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}n_{i}^{\rm s} \quad (j=1,\ldots,{\rm E}).
 \end{alignat}
 
-%\begin{alignat}{2}
-%b_{j}^{\rm f} & =\sum_{i=1}^{{\rm N}^{\rm f}}A_{ji}^{\rm f}n_{i}^{\rm f} & \qquad & (j=1,\ldots,{\rm E})\\
-%\shortintertext{and}b_{j}^{\rm s} & =\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}n_{i}^{\rm s} &  & (j=1,\ldots,{\rm E}).
-%\end{alignat}
-
-Recall that the rates of production of the species $r_{i}^{\rm f}$
-and $r_{i}^{\rm s}$ are exclusively due to chemical reactions.
-Let $r_{i}$ denote the rate of production\slash consumption of the
-$i$th species in the system (i.e., using global index, and not a
-local index within the fluid or solid partition). From the mass conservation
-condition for the elements (chemical elements and electrical charge),
-it follows that
+%---------------------------------------------------------------------------------------------------%
+Recall that the rates of production of the species $r_{i}^{\rm f}$ and $r_{i}^{\rm s}$ are 
+exclusively due to chemical reactions. Let $r_{i}$ denote the rate of production\slash consumption 
+of the $i$th species in the system (i.e., using global index, and not a local index within the fluid 
+or solid partition). From the \emph{mass conservation condition} for the elements (chemical elements 
+and electrical charge), it follows that
 %
 \begin{equation}
 \underset{\substack{{\rm rate \; of \; production}\\
@@ -2133,298 +2112,169 @@ it follows that
 }{\underbrace{\sum_{i=1}^{{\rm N}^{\rm s}}A_{ji}^{\rm s}r_{i}^{\rm s}}}=\quad0,
 \end{equation}
 %
-which is the mathematical statement for the fact that \emph{elements
-are neither created nor destroyed} during chemical reactions. We can
-combine this result with equations (\ref{eq:cons-mass-fluid-species})
-and (\ref{eq:cons-mass-solid-species}) to derive the following conservation
-equations for the elements:
+%---------------------------------------------------------------------------------------------------%
+which means that \emph{elements are neither created nor destroyed} during chemical reactions. 
+We can combine this result with equations (\ref{eq:cons-mass-fluid-species}) and (\ref{eq:cons-mass-solid-species}) to derive the following conservation equations for the elements: 
+%
 \begin{equation}
 \frac{\partial b_{j}^{\rm s}}{\partial t}+\frac{\partial b_{j}^{\rm f}}{\partial t}+\nabla\cdot(\boldsymbol{v}b_{j}^{\rm f}-D\nabla b_{j}^{\rm f})=0\qquad(j=1,\ldots,{\rm E}).
 \end{equation}
+%
+Assume that all species, fluid and solid, are in \emph{local chemical equilibrium} everywhere, 
+at all times. One can then perform \emph{operator splitting steps} described by 
+Eq.~\eqref{eq:transport} and Eq.~\eqref{eq:reaction} to solve the fundamental mass conservation 
+equations (\ref{eq:cons-mass-fluid-species}) and (\ref{eq:cons-mass-solid-species}) to calculate 
+the concentrations of the species $n_{i}$ over time.
 
-Assume that all species, fluid and solid, are in \emph{local chemical
-equilibrium everywhere, at all times}. One can then perform \emph{operator
-splitting steps} to solve the fundamental mass conservation equations
-(\ref{eq:cons-mass-fluid-species}) and (\ref{eq:cons-mass-solid-species})
-to calculate the concentrations of the species $n_{i}$ over time.
-Let $k$ denote the current \emph{time step} and $\Delta t$ the \emph{time
-step length} used in the discretization of the time derivative terms.
-The operator splitting steps at the $k$th time step are:
-
-
+%---------------------------------------------------------------------------------------------------%
+Let $k$ denote the current \emph{time step} and $\Delta t$ the \emph{time step length} used in 
+the uniform discretization of the time derivative terms. The detailed operator splitting steps 
+at the $k$th time step (where Steps 1)--2) correspond to Eq.~\eqref{eq:transport} and 3) to 
+Eq.~\eqref{eq:reaction}) are
+%
 \begin{enumerate}[wide, labelwidth=!, labelindent=0pt]
-\item[\textbf{Step 1)}] We consider (Eq.~\ref{eq:transport}) without
-${\partial b_{j}^{\text{s}}}/{\partial t}$ term and
-compute an intermediate approximation of element concentrations in the fluid
-partition $\tilde{b}^{\text{f}}=(\tilde{b}_{1}^{\text{f}},\ldots,\tilde{b}_{\mathrm{E}}^{\text{f}})$
+\item[\textbf{Step 1)}] We consider Eq.~(\ref{eq:transport}) without 
+${\partial b_{j}^{\text{s}}}/{\partial t}$ term and compute an intermediate approximation of element concentrations in the fluid partition $\tilde{b}^{\text{f}}=(\tilde{b}_{1}^{\text{f}},\ldots,\tilde{b}_{\mathrm{E}}^{\text{f}})$
 at time $t_{k+1}$ using
+%
 \begin{equation}
-\frac{\tilde{b}_{j}^{\text{f},k+1}-\tilde{b}_{j}^{\text{f},k}}{\Delta t}+\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{\text{f},k+1}-D\nabla\tilde{b}_{j}^{\text{f},k+1})=0\qquad(j=1,\ldots,\text{E}),\label{eq:fluid-element-transport}
+\frac{\tilde{b}_{j}^{\text{f},k+1}-\tilde{b}_{j}^{\text{f},k}}{\Delta t}
++\nabla\cdot(\boldsymbol{v}\tilde{b}_{j}^{\text{f},k+1}-D\nabla\tilde{b}_{j}^{\text{f},k+1})
+=0\qquad(j=1,\ldots,\text{E}),
+\label{eq:fluid-element-transport}
 \end{equation}
 %
-with the following flux boundary condition at $x=x_{L}$ (on the left
-boundary inlet face, where we inject the CO$_{2}$-saturated brine):
+with the following flux boundary condition at $x=x_{L}$ (on the left boundary inlet face, where we 
+inject the CO$_{2}$-saturated brine):
+%
 \begin{equation}
--(\boldsymbol{v}\tilde{b}_{j}^{{\rm f},k+1}-D\nabla\tilde{b}_{j}^{{\rm f},k+1})\cdot\textbf{n}_{L}=v\phi_{L}\hat{b}_{j,L}
+-(\boldsymbol{v}\tilde{b}_{j}^{{\rm f},k+1}-D\nabla\tilde{b}_{j}^{{\rm f},k+1})\cdot\textbf{n}_{L}
+=v\phi_{L}\hat{b}_{j,L}
 \qquad(j=1,\ldots,{\rm E}),
 \end{equation}
 %
-where subscript $L$ denotes the left boundary at $x=x_{L}$,
+where subscript $L$ denotes the left boundary at $x=x_{L}$, 
 $\textbf{n}_{L}$ is the normal vector on the inflow face,
 $\phi_{L}$ is the current porosity at $x=x_{L}$ (which changes with time),
-and $\hat{b}_{j,L}$ (in $\mathrm{mol/m_{\mathrm{fluid}}^{3}}$) is the imposed concentration of the $j$th element in the injected brine.
+and $\hat{b}_{j,L}$ (in $\mathrm{mol/m_{\mathrm{fluid}}^{3}}$) is the imposed concentration of 
+the $j$th element in the injected brine.
 %
-To match the units of concentrations of the elements in the fluid $[b_{j}]=\mathrm{mol/m_{\mathrm{bulk}}^{3}}$
+%---------------------------------------------------------------------------------------------------%
+To match the units of concentrations of the elements in the fluid 
+$[b_{j}]=\mathrm{mol/m_{\mathrm{bulk}}^{3}}$
 and the imposed concentration $[\hat{b}_{j,L}]=\mathrm{mol/m_{\mathrm{fluid}}^{3}}$ , we need to
-multiply it by $\phi_{L}$ ($\mathrm{m_{fluid}^{3}/m_{bulk}^{3}}$). The right face 
-pf the rock is considered free. 
+multiply it by $\phi_{L}$ ($\mathrm{m_{fluid}^{3}/m_{bulk}^{3}}$). The right face of the rock 
+is considered free. 
 %
+%---------------------------------------------------------------------------------------------------%
 To discretize the above partial differential equations in space, a finite volume method is applied.
 The time integration uses an implicit scheme for both advection and diffusion.
 %
-\item[\textbf{Step 2)}] Update the total concentrations of each element $b_{j}$ using
-the previously computed intermediate concentrations of each element in the fluid $b_{j}^{\mathrm{f}}$:
+\item[\textbf{Step 2)}] Update the total concentrations of each element $b_{j}$ using the previously 
+computed intermediate concentrations of each element in the fluid $b_{j}^{\mathrm{f}}$:
 %
 \begin{equation}
 b_{j}^{k+1}=\tilde{b}_{j}^{\text{f},k+1}+b_{j}^{\text{s},k}.
 \end{equation}
 %
-Note that each element concentration in the solid partition $b_{j}^{\mathrm{s}}$
-remains constant during the transport calculations in the previous
-step.
-\item[\textbf{Step 3)}] Calculate the concentrations of the species, $n_{i}^{k+1}$, in
-each mesh cell. For this, use as inputs the temperature and pressure
-values of the cell together with the \emph{updated local concentrations
-of elements}, $b_{j}^{k+1}$, from the previous step. Let the on-demand
-learning algorithm determine, in each cell, if it needs to fully solve
-the current equilibrium problem or if it can quickly estimate the
-species amounts $n=(n_{1},\ldots,n_{\mathrm{N}})$ using a previously
-learned problem with similar inputs.
+Note that each element concentration in the solid partition $b_{j}^{\mathrm{s}}$ remains constant 
+during the transport calculations in the previous step.
+
+%---------------------------------------------------------------------------------------------------%
+\item[\textbf{Step 3)}] Calculate the concentrations of the species $n_{i}^{k+1}$ in each mesh cell. 
+For this, use as inputs the temperature and pressure values of the cell together with the 
+\emph{updated local concentrations of elements} $b_{j}^{k+1}$ from the previous step. 
+%
+Let the on-demand learning algorithm determine, in each cell, if it needs to fully solve the current equilibrium problem or if it can quickly estimate the species amounts 
+$n^{k+1}=(n_{1},\ldots,n_{\mathrm{N}})^{k+1}$ using a previously learned problem with similar inputs.
 \end{enumerate}
  
 \section{Chemical Kinetics Equations \label{subsec:Chemical-kinetics-equations}}
 
 %---------------------------------------------------------------------------------------------------%
-The \textbf{principle of mass conservation} $\frac{dn}{dt}=q$ yields 
+The \emph{principle of mass conservation} $\frac{\partial n}{\partial t}=q$ after multiplication by
+$A$ yields $\frac{\partial b}{\partial  t} = A q$, which is equivalent to
 %
-\[
-\frac{db}{dt}=\frac{db_{e}}{dt}+\frac{db_{k}}{dt}=Aq=A_{e}q_{e}+A_{k}q_{k},
+\begin{equation}
+\frac{\partial b_{e}}{\partial t} + \frac{\partial b_{k}}{\partial t} 
+= A_{e} q_{e} + A_{k} q_{k},
 \label{eq:mass-concervation}
-\]
+\end{equation}
 %
-i.e., the amounts of the elements in the system $b$ vary according to the amounts of elements 
+i.e., the amounts of the elements $b$ in the system vary according to the amounts of elements 
 entering/leaving the system as a result of the given inflow/outflow rates of chemical species $q$. 
 %
-At the same time, Eq. \ref{eq:kinetics} for kinetic species yields
+
+At the same time, the amounts of the kinetic species $n_{k}$ are governed by the system of ordinary differential equations (ODEs)
+%
+\begin{equation}
+\begin{array}{r@{$\;$}l@{$\quad$}l}
+	\frac{\partial n_{k}}{\partial t} & = \nu_{k}^{\rm T} \, r(n_{k}) + q_{k} & t>0,\\
+                n_{k} & = n_{k}^{\circ}    & t=0,
+\end{array}
+\label{eq:kinetics-appendix}
+\end{equation}
+%
+%---------------------------------------------------------------------------------------------------%
+where $r$ are the \emph{rates} of the kinetically controlled reactions,  $q_{k}$ denotes 
+the \emph{vector of inflow/outflow} rates of the kinetic species, $n_{k}^{\circ}$ is
+the \emph{initial amounts} of the kinetic species, $\nu_{k}$ is matrices formed from 
+the columns of the stoichiometric matrix $\nu=\begin{bmatrix}\nu_{e}\,\nu_{k}\end{bmatrix}$. 
+This the identity the following identity:
 %
 \begin{align}
-\frac{db_{k}}{dt} & =A_{k}\nu_{k}^{T}r+A_{k}q_{k}.
+\frac{\partial b_{k}}{\partial t} & = A_{k}\nu_{k}^{\rm T}r + A_{k}q_{k}.
 \label{eq:kinetics-with-b}
 \end{align}
 %
 %---------------------------------------------------------------------------------------------------%
-Combination of Eq. \ref{eq:mass-concervation} and \ref{eq:kinetics-with-b} leads to
+Combination of Eq.~\eqref{eq:mass-concervation} and Eq.~\eqref{eq:kinetics-with-b} leads to
 %
 \[
-\frac{db_{e}}{dt}=A_{e}q_{e}-A_{k}\nu_{k}^{T}r.
+\frac{\partial b_{e}}{\partial t}=A_{e}q_{e}-A_{k}\nu_{k}^{\rm T}r.
 \]
 %
-Using the \emph{stoichiometric balance condition} $A\nu^{T}=A_{e}\nu_{e}^{T}r+A_{k}\nu_{k}^{T}r=0$, 
-which can be rewritten as $-A_{k} \, \nu_{k}^{T} \, r = A_{e}  \, \nu_{e}^{T} \, r$, we arrive at
+Using the \emph{stoichiometric balance condition} 
+$A\nu^{\rm T}=A_{e}\nu_{e}^{\rm T}r+A_{k}\nu_{k}^{\rm T}r=0$, 
+which can be rewritten as $-A_{k} \, \nu_{k}^{\rm T} \, r = A_{e}  \, \nu_{e}^{\rm T} \, r$, 
+we arrive at
+%
 \[
-\frac{db_{e}}{dt} = A_{e}q_{e}-A_{k}\nu_{k}^{T}r = A_{e}(q_{e}+\nu_{e}^{T}r).
+\frac{\partial b_{e}}{\partial t} = A_{e}q_{e}-A_{k}\nu_{k}^{\rm T}r = A_{e}(q_{e}+\nu_{e}^{\rm T}r).
 \]
 %
-This means that the \emph{chemical state of a system} is govern by the following differential-algebraic 
-problem
+Thus, the \emph{chemical state of a system} is govern by the following differential-algebraic problem
 %
-\[
+\begin{equation}
 \begin{cases}
-\frac{dn_{k}}{dt}=\nu_{k}^{T}r+q_{k} & t>0\\
-\frac{db_{e}}{dt}=A_{e}(q_{e}+\nu_{e}^{T}r) & t>0\\
-n_{e}=\varphi(b_{e}) & t>0\\
-n_{k}=n_{k}^{\circ} & t=0\\
-n_{e}=n_{e}^{\circ} & t=0\\
-b_{e}=A_{e}n_{e}^{\circ} & t=0
-\end{cases},
-\]
-where $n=(n_{e}^{\circ},n_{k}^{\circ})$ is given initial condition.
+\frac{\partial b_{e}}{\partial t}=A_{e}(q_{e}+\nu_{e}^{\rm T}r) & t>0,\\
+\frac{\partial n_{k}}{\partial t}=\nu_{k}^{\rm T}r+q_{k} & t>0,\\
+n_{e}=\varphi(b_{e}) & t>0,\\
+b_{e}=A_{e}n_{e}^{\circ} & t=0, \\
+n_{k}=n_{k}^{\circ} & t=0,\\
+n_{e}=n_{e}^{\circ} & t=0,\\
+\end{cases}
+\label{eq:kinetics-full}
+\end{equation}
+%
+where $n^\circ = [n_{e}^{\circ},n_{k}^{\circ}]^{\rm T}$ is given initial condition.
+%---------------------------------------------------------------------------------------------------%
 
-Open system:
+The system of ODEs, which we need to solve on each reactive transport step, reads as
 %
 \begin{align*}
-\frac{dn}{dt} & =\nu^{T}r+q & t>0,\\
-n & =n^{\circ} & t=0,
-\end{align*}
-where $r_{m}=r_{m}(T,P,n,a)$ is nonlinear dependent from $n$
-\begin{itemize}
-\item $q\in R^{N}$is a \emph{vector of inflow rates},
-\item $n\in R^{N}$is a\emph{ vector of composition} of the chemical system,
-\item $a\in R^{N}$is \emph{species activities}.
-\end{itemize}
-%System of non-linear ODEs due to the non-linear dependence of $r_{m}=r_{m}(T,P,n,a)$ from $n$.\\
-
-\textbf{\textcolor{brown}{Rate laws}}\\
-\textbf{\textcolor{brown}{}}\\
-\textcolor{black}{General }\textbf{\textcolor{black}{rate law}}\textcolor{black}{{}
-for crystal growth and mineral dissolution (allows to model several
-kinetic mineral mechanisms such as acid, neutral, base, carbonate,
-and so forth) / mineral dissolution and precipitation
-\begin{align*}
-r_{m}(T,P,n) & :=n_{m}\sigma_{m}\sum_{i}M_{m,i}(T,P,n),\\
-M_{m,i}(T,P,n) & :={\rm sgn}(1-\Omega)k_{m,i}|1-\Omega^{p_{i}}|^{q_{i}}\prod_{j}a_{j}^{\xi_{j}}\prod_{g}P_{g}^{\eta_{g}},
-\end{align*}
-where}
-\begin{itemize}
-\item $n_{m}$ is the \emph{current molar amount} of the mineral, either
-dissolving or precipitating;
-\item $\sigma_{m}$ is current specific\emph{ reactive surface area} of
-the mineral (m2 / mol);
-\item \textcolor{black}{$\Omega:=\frac{1}{K_{m}}\prod_{i=1}^{N}a_{i}^{\nu_{i}}$
-is current }\textcolor{black}{\emph{saturation index}}\textcolor{black}{{}
-of the mineral defined via activity product (and }$\nu_{i}$\emph{
-stoichiometric coefficient} of the $i$-th ionic species\textcolor{black}{)
-and }\textcolor{black}{\emph{equilibrium constant}}\textcolor{black}{{}
-$K_{m}$}
-\item \textcolor{black}{$k_{m,i}$ is the }\textcolor{black}{\emph{rate
-constant}}\textcolor{black}{{} of the $i$th mineral reaction,$k_{m,i}:=k_{m,i}^{\circ}\exp\bigg[-\frac{E_{m,i}}{R}(\frac{1}{T}-\frac{1}{298.15})\bigg]$
-(Arrhenius equation) with $k_{m,i}^{\circ}$ as the }\textcolor{black}{\emph{reaction
-rate}}\textcolor{black}{{} constant at 25 °C, the }\textcolor{black}{\emph{activation
-energy}}\textcolor{black}{{} $E_{m,i}$; and the }\textcolor{black}{\emph{universal
-gas constant }}\textcolor{black}{$R$;}
-\item \textcolor{black}{$p_{i}$ and $q_{i}$ are }\textcolor{black}{\emph{empirical
-exponents}}\textcolor{black}{{} used to fit the rate law and control
-how saturation affects the mineral rate; and}
-\item \textcolor{black}{$a_{j}$ is the }\textcolor{black}{\emph{activity}}\textcolor{black}{{}
-of the $j$th species, $P_{g}$ is the }\textcolor{black}{\emph{partial
-pressure}}\textcolor{black}{{} of the $g$th gaseous species; and}
-\item \textcolor{black}{$\xi_{j}$and $\eta_{g}$ are the exponents of the
-catalysts (>0) and inhibitors (<0).}
-\end{itemize}
-\textbf{\textcolor{brown}{Partial equilibrium}}\\
-\textbf{\textcolor{brown}{}}\\
-Partition to:
-\begin{itemize}
-\item \emph{slow / kinetics} reaction (corresponding kinetics species) 
-\[
-0\rightleftharpoons\sum_{i=1}^{N}\nu_{ij}^{k}\alpha_{i},j=1,...,M_{k}
-\]
-with$\boldsymbol{\nu}_{k}\mathbb{\in M}^{M_{k}\times N}$, which include
-kinetic $\boldsymbol{\nu}_{kk}\mathbb{\in M}^{M_{k}\times N_{k}}$
-and equilibrium species $\boldsymbol{\nu}_{ke}\mathbb{\in M}^{M_{k}\times N_{e}}$
-\item \emph{fast / equilibrium} reaction (corresponding equilibrium species)
-\end{itemize}
-\textcolor{brown}{Question: Isn't stoichometry just for the reactions?}
-
-Then,
-\begin{itemize}
-\item $n_{e}$ and $n_{k}$ are the vectors of the amounts of the equilibrium
-and the kinetic species, respectively;
-\item $b_{e}$ and $b_{k}$ are the vectors of the amounts of the elements
-such that 
-\[
-n=\begin{bmatrix}n_{e}\\
-n_{k}
-\end{bmatrix}:\mathbb{R}^{N}\rightarrow\mathbb{R}^{N}
-\]
-\item $A_{e}$ and $A_{k}$ are matrices of the equilibrium and kinetic
-species $A=\begin{bmatrix}A_{e}\,A_{k}\end{bmatrix}$and
-\item $\nu_{e}$ and $\nu_{k}$ are matrices formed from the \textbf{columns}
-of the stoichiometric matrix $\nu=\begin{bmatrix}\nu_{e}\,\nu_{k}\end{bmatrix}$
-\end{itemize}
-Dependence of $n_{e}$ from $b_{e}$ is prescribed by the chemical
-equilibrium function $n_{e}=\varphi(b_{e}),\varphi:\mathbb{R}^{E}\rightarrow\mathbb{R}^{N}$
-that encapsulates the specific algorithmic steps to solve the equilibrium
-problem
-\[
-\varphi(b_{e}):={\rm argmin}_{n_{e}}G_{e}=n_{e}^{T}\mu_{e}\quad\mbox{subject to}\quad\begin{cases}
-A_{e}n_{e} & =b_{e}\\
-n_{e} & \geq0
-\end{cases}.
-\]
-
-The amounts of the kinetic species, $n_{k}$
-\begin{align*}
-\frac{dn_{k}}{dt} & =\nu_{k}^{T}r+q_{k} & t>0,\\
-n_{k} & =n_{k}^{\circ} & t=0,
-\end{align*}
-where
-\begin{itemize}
-\item $r$ are the \emph{rates} of the kinetically controlled reactions;
-\item $q_{k}$ denotes the\emph{ vector of inflow/outflow} rates of the
-kinetic species and
-\item $n_{k}^{\circ}$ the \emph{initial amounts }of the kinetic species.
-\end{itemize}
-
-The \textbf{principle of mass conservation} yields (the amounts of
-chemical elements and electrical charge in the system must satisfy
-the conservation equation)
-\[
-\frac{dn}{dt}=q\quad\rightarrow\quad\frac{db}{dt}=\frac{db_{e}}{dt}+\frac{db_{k}}{dt}=Aq=A_{e}q_{e}+A_{k}q_{k}.
-\]
-The amounts of the elements in the system $b$ vary according to the
-amounts of elements entering/leaving the system as a result of the
-given inflow/outflow rates of chemical species $q$. At the same time,
-for kinetic species
-\begin{align*}
-\frac{dn_{k}}{dt}=\nu_{k}^{T}r+q_{k}\rightarrow\quad\frac{db_{k}}{dt} & =A_{k}\nu_{k}^{T}r+A_{k}q_{k}.
-\end{align*}
-\\
-Combination of those two leads to
-\[
-\frac{db_{e}}{dt}=A_{e}q_{e}-A_{k}\nu_{k}^{T}r.
-\]
-Alternatively, the \emph{stoichiometric balance condition $A\nu^{T}=0$
-}yields\textcolor{black}{
-\[
-A\nu^{T}r=A_{e}\nu_{e}^{T}r+A_{k}\nu_{k}^{T}r=0\quad\rightarrow\quad-A_{k}\nu_{k}^{T}r=A_{e}\nu_{e}^{T}r,
-\]
-which can be used above}
-\[
-\frac{db_{e}}{dt}=A_{e}q_{e}-A_{k}\nu_{k}^{T}r=A_{e}(q_{e}+\nu_{e}^{T}r).
-\]
-The \emph{chemical state of a system} is govern by the following differential-algebraic problem
-%
-\[
-\begin{cases}
-\frac{dn_{k}}{dt}=\nu_{k}^{T}r+q_{k} & t>0\\
-\frac{db_{e}}{dt}=A_{e}(q_{e}+\nu_{e}^{T}r) & t>0\\
-n_{e}=\varphi(b_{e})     & t>0\\
-n_{k}=n_{k}^{\circ}      & t=0\\
-n_{e}=n_{e}^{\circ}      & t=0\\
-b_{e}=A_{e}n_{e}^{\circ} & t=0\\
-\end{cases},
-\]
-%
-where $n=(n_{e}^{\circ},n_{k}^{\circ})$ is given initial condition.
-%
-\textbf{Chemical kinetics: Computational methods}\\
-\textbf{}\\
-System of ODEs\textbf{}\\
-\begin{align*}
-\frac{du}{dt} & =f(u) & t>0,\\
+\frac{\partial u}{\partial t} & =f(u) & t>0,\\
 u & =u^{\circ} & t=0,
+\label{eq:ode}
 \end{align*}
-where $u=\begin{bmatrix}b_{e}\\
-n_{k}
-\end{bmatrix}$, $f(u)=\begin{bmatrix}A_{e}(\nu_{e}^{T}r+q_{e})\\
-\nu_{k}^{T}r+q_{k}
-\end{bmatrix}$, and $u^{\circ}=\begin{bmatrix}A_{e}n_{e}^{\circ}\\
-n_{k}^{\circ}
-\end{bmatrix}.$
+%
+with vector of unknowns $u=\begin{bmatrix} b_{e}\\n_{k}\end{bmatrix}$, right-hand side
+$f(u)=\begin{bmatrix}A_{e}(\nu_{e}^{\rm T}r+q_{e})\\\nu_{k}^{\rm T}r+q_{k}\end{bmatrix}$, 
+and initial condition $u^{\circ}=\begin{bmatrix}A_{e}n_{e}^{\circ}\\n_{k}^{\circ}\end{bmatrix}.$
 
-For BDF mehod, the Jacobian of $f(u)$ is required, since in by backward
-Euler method we obtain 
-\[
-u^{k+1}=u^{k}+dtf(u^{k+1}),
-\]
-which is solved by the Newton method for nonlinear equation
-\[
-g(u)=u-u^{k}-dtf(u)=0.
-\]
-Newton methods for reads as: $u^{l+1}=u^{l}+\Delta u^{l},$where the
-increment is reconstructed from $(I-dt\, J^{l})\Delta u^{l}=-g^{l}$.
-
+To numerically solve Eq.~\eqref{eq:ode}, we use the open-source solver for systems of ODEs 
+\texttt{CVODE}, which is based on Adams and the BDF method. 
+%
 \section{Chemical Equilibrium Equations \label{subsec:Chemical-equilibrium-equations}}
 
 The solution of the Gibbs energy minimization problem ~(\ref{eq:gem-problem})
@@ -2432,7 +2282,7 @@ needs to satisfy the following \emph{first-order optimality conditions,}
 also known as \emph{Karush–Kuhn–Tucker (KKT) conditions}, for a local
 minimum of the Gibbs energy function $G$ \citep{Nocedal1999,Fletcher2000}:
 \begin{alignat}{2}
-\mu-A^{T}y-z & =0,\\
+\mu-A^{\rm T}y-z & =0,\\
 An-b & =0,\\
 n_{i}z_{i} & =0 & \qquad & (i=1,\ldots,{\rm N}),\\
 n_{i} & \geq0 &  & (i=1,\ldots,{\rm N}),\\
@@ -2493,10 +2343,23 @@ law of mass action equations, see \citet{Leal2016c,Leal2017}.
 
 \subsection{Smart chemical kinetics with specific surface area 50}
 
-Illustrations of the results obtained for the numerical example similar to the one considered in
-Section \ref{subsec:part-2} but with specific surface areas of calcite set to 50.
+%---------------------------------------------------------------------------------------------------%
+We present short summary of the results obtained for the numerical example similar to the one 
+considered in Section \ref{subsec:part-2} but with specific surface areas of calcite set to 50. 
+The sharp increases 
+and decreases in the concentrations of aqueous species, occurring at the points of the phase changes 
+(see Figures \ref{fig:aqueous-10-sa-50}--\ref{fig:aqueous-2400-sa-50}), are smoother than the one 
+obtained for previous examples. The amount of on-demand learnings, presented in Figure 
+\ref{fig:number-training-kinetics-sa-50} is within expected range, i.e., 0.21 \% of all chemical 
+kinetics evaluations needed in each mesh-cell during each time step. The comparison of the CPU costs
+in Figure \ref{fig:computational-cost-kinetics-sa-50} and current, as well as potential speedups in 
+Figure \ref{fig:speedup-with-and-without-search-costs-kinetics-sa-50} drive the same conclusions 
+as the example discussed in Section \ref{sec:Results}. We plan to further extend functionally of 
+\texttt{Reaktoro} for representing kinetically controlled species, i.e., remove specific surface 
+area from the definition of reactions and add it to the properties of chemical state, which means 
+it will change depending on the precipitating or dissolving in this mesh-cell minerals.
 
-\begin{figure}[!t]
+\begin{figure}[]
 \centering
 \subfloat[]{{\includegraphics[width=0.48\textwidth, 
 trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-sa-50/calcite-dolomite-10}\label{fig:minerals-10-sa-50}}}
@@ -2529,9 +2392,9 @@ ${\rm (}\circ{\rm )}$ depict the cells where \emph{on-demand learning/training} 
 %---------------------------------------------------------------------------------------------------%
 \begin{figure}[!t]
 \subfloat[Number of on-demand trainings per time step]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-sa-50/on-demand-learning-countings}}
+\includegraphics[width=0.49\textwidth]{figures/kinetics-sa-50/on-demand-learning-countings}}
 \subfloat[Accumulated amount of the on-demand leanings]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-sa-50/on-demand-learning-total}}
+\includegraphics[width=0.49\textwidth]{figures/kinetics-sa-50/on-demand-learning-total}}
 \caption{\emph{On-demand learning} operations triggered by the smart chemical kinetics 
 (a) per each time step and (b) accumulated during the reactive transport. 
 Overall, 2127 (or 0.21\%) of 1'000'000 chemical states were evaluated using the full numerical 
@@ -2544,10 +2407,10 @@ and accurately estimated ODML algorithm.
 %---------------------------------------------------------------------------------------------------%
 \begin{figure}[!t]
 \subfloat[Computing costs]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-sa-50/computing-costs}
+{\includegraphics[width=0.49\textwidth, trim={0.3cm 0 0.5cm 0},clip]{figures/kinetics-sa-50/computing-costs}}
 \label{fig:computational-cost-kinetics-sa-50}}
 \subfloat[Speedups]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-sa-50/speedups}
+\includegraphics[width=0.49\textwidth, trim={0.3cm 0 0 0},clip]{figures/kinetics-sa-50/speedups}
 \label{fig:speedup-with-and-without-search-costs-kinetics-sa-50}}
 \caption{
 (a) Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
@@ -2567,72 +2430,90 @@ the retrieval of the reference state (green). The latter indicates an upper boun
 upon improvement of the search algorithm.}
 \end{figure}
 
+\newpage
+\newpage
+\newpage
+
 \subsection{Example with two kinetically controlled species}
 
 %---------------------------------------------------------------------------------------------------%
-Illustrations of the results obtained for the numerical example, where both calcite and dolomite are
-considered dissolving and precipitation kinetically. 
-%
-\begin{lstlisting}[language=Python, caption=Parameters of the rate model for Dolomite]
+Next, we list some of the results obtained for the numerical example, where both calcite and 
+dolomite are considered dissolving and precipitation kinetically. The rate model parameters of the 
+dolomite are presented in Listing \ref{lst:dolomite}, the one for calcite are considered the same as
+the one in Subsection \ref{subsec:part-2}.
+
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=C++, caption=Parameters of the rate model for dolomite, label=lst:dolomite]
 editor.addMineralReaction("Dolomite")
-            .setEquation("Dolomite = Ca++ + Mg++ + 2*CO3--")
-            .addMechanism("logk = -7.53 mol/(m2*s); Ea = 52.2 kJ/mol")
-            .addMechanism("logk = -3.19 mol/(m2*s); Ea = 36.1 kJ/mol; a[H+] = 0.5")
-            .setSpecificSurfaceArea(5000, "cm2/g");
+      .setEquation("Dolomite = Ca++ + Mg++ + 2*CO3--")
+      .addMechanism("logk = -7.53 mol/(m2*s); Ea = 52.2 kJ/mol")
+      .addMechanism("logk = -3.19 mol/(m2*s); Ea = 36.1 kJ/mol; a[H+] = 0.5")
+      .setSpecificSurfaceArea(5000, "cm2/g");
 \end{lstlisting}
+\end{minipage}
 
-The initial composition of the rock contains not only calcite but also dolomite.
+The initial composition of rock in this example contains 90 \% of quartz, 6\% of calcite, and 
+4\% of dolomite. This also can be observed from the initial reactive transport step in Figure 
+\ref{fig:minerals-1000-kinetics-calcite-dolomite} illustrating first steps of minerals precipitation 
+and dissolution. In comparison to the results obtained in Section \ref{subsec:part-2} the chemical 
+reactions of this system proceed much slower, i.e., calcite just dissolved in until 0.06-0.07m 
+of the rock column after 80 days and until approximately 0.15 after 150 days.  
 
+\begin{comment}
+\begin{minipage}{\linewidth}
+\begin{lstlisting}[language=C++, caption={Phase volumes of quartz, calcite, and dolomite}, label=lst:phase-volume]
+state_ic.scalePhaseVolume("Aqueous", 0.1, "m3"); // 0.1 is 10% for 1.0m3 of volume
+state_ic.scalePhaseVolume("Quartz", 0.81, "m3"); // 90% quartz of the 0.9m3 of rock
+state_ic.scalePhaseVolume("Calcite", 0.054, "m3"); // 6% calcite of the 0.9m3 of rock
+state_ic.scalePhaseVolume("Dolomite", 0.036, "m3"); // 4% dolomite of the 0.9m3 of rock
+\end{lstlisting}
+\end{minipage}
+\end{comment}
 
-
-\begin{figure}[!t]
-\centering
-\subfloat[]{{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-10}
-\label{fig:minerals-10-kinetics-calcite-dolomite}}}
-\subfloat[]{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-10}
-\label{fig:aqueous-10-kinetics-calcite-dolomite}} \\[-10pt]
-%
-\subfloat[]{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-48}
-\label{fig:minerals-1000-kinetics-calcite-dolomite0}}
-\subfloat[]{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-48}
-\label{fig:aqueous-1000-kinetics-calcite-dolomite}}\\[-10pt]
-%
-\subfloat[]{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-3840}
-\label{fig:minerals-2400-kinetics-calcite-dolomite}}
-\subfloat[]{\includegraphics[width=0.46\textwidth, 
-trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-3840}
-\label{fig:aqueous-2400-kinetics-calcite-dolomite}}
-\caption{
-The volume percent ($\%_{{\rm vol}}$) of the minerals calcite and dolomite along the rock core 
-as well as the concentrations of selected aqueous species (in molal) at three different times: 
-5 hours, 20d and 20hours, and 50 days (after 10, 1000, and 2400 time steps of 30 minutes each). 
-The \emph{solid curves} correspond to results of the reactive transport simulation using conventional
-chemical kinetics calculations based on the integration of the system of ODEs for kinetically 
-controlled species and update of the equilibrium species by the Gibbs energy minimization.
-The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$ correspond to the results using smart 
-chemical kinetics calculations. \emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
-fast and accurate smart kinetics prediction at that point, whereas the \emph{empty circles} 
-${\rm (}\circ{\rm )}$ depict the cells where \emph{on-demand learning/training} was needed.}
-\label{fig:calcite-dolomite-kinetics-calcite-dolomite-50}
-\end{figure}
+Unlike the examples with only one kinetics species, Figure 
+\ref{fig:number-trainingkinetics-calcite-dolomite} demonstrates rather uniform distribution of the 
+learnings throughout the reactive transport simulation. This influences the accumulated number of 
+the trainings in Figure \ref{fig:number-trainingkinetics-calcite-dolomite-2}, which now reminds 
+the stair case (i.e., on some steps of reactive transport we need up to 6 or 7 learnings, in 
+comparison to those steps, where 1 or none learnings are needed). We plan to study in dept the 
+reasons why these learnings are triggered and possible improve the quality of prediction or 
+acceptance criterion. 
 
 %---------------------------------------------------------------------------------------------------%
 \begin{figure}[!t]
 \subfloat[Number of on-demand trainings per time step]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/on-demand-learning-countings}}
+\includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/on-demand-learning-countings}
+\label{fig:number-trainingkinetics-calcite-dolomite-1}}
 \subfloat[Accumulated amount of the on-demand leanings]{
-\includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/on-demand-learning-total}}
+\includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/on-demand-learning-total}
+\label{fig:number-trainingkinetics-calcite-dolomite-2}}
 \caption{\emph{On-demand learning} operations triggered by the smart chemical kinetics 
 (a) per each time step and (b) accumulated during the reactive transport. 
-Overall, ** (or **\%) of 1'000'000 chemical states were evaluated using the full numerical 
+Overall, 2565 (or 0.26\%) of 1'000'000 chemical states were evaluated using the full numerical 
 integration of the system of ODEs for kinetically controlled species, the rest 99.79\% were quickly 
 and accurately estimated ODML algorithm.
 \label{fig:number-trainingkinetics-calcite-dolomite}}
+\end{figure}
+
+%---------------------------------------------------------------------------------------------------%
+\begin{figure}[!t]
+\subfloat[Computing costs]{
+\includegraphics[width=0.47\textwidth]{figures/kinetics-only-calcite-dolomite/computing-costs}
+\label{fig:computational-cost-kinetics-calcite-dolomite}}
+\subfloat[Speedups]{
+\includegraphics[width=0.47\textwidth]{figures/kinetics-only-calcite-dolomite/speedups}
+\label{fig:speedup-with-and-without-search-costs-kinetics-calcite-dolomite}}
+\caption{
+Results obtained for the ODML applied to chemical kinetics only.
+(a) Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
+chemical kinetics calculations, and \emph{zero-search-cost} smart kinetics calculations per each 
+reactive transport time step, where the ODML applied for both kinetics and equilibrium. 
+%
+(b) The speedup factor of chemical kinetics calculations, at each time step of the simulation, 
+resulting from the use of the on-demand learning acceleration strategy, employing a linear NN search 
+(blue), where the ODML applied for both kinetics and 
+equilibrium. A comparison is made with the speedup obtained by removing the computing time needed for 
+the retrieval of the reference state (orange).}
 \end{figure}
 
 %---------------------------------------------------------------------------------------------------%
@@ -2644,6 +2525,7 @@ and accurately estimated ODML algorithm.
 \includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/speedups}
 \label{fig:speedup-with-and-without-search-costs-kinetics-calcite-dolomite}}
 \caption{
+Results obtained for the ODML applied to both chemical kinetics and equilibrium.
 (a) Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
 chemical kinetics calculations, and \emph{zero-search-cost} smart kinetics calculations per each 
 reactive transport time step, where the ODML applied for both kinetics and equilibrium. 
@@ -2654,6 +2536,49 @@ resulting from the use of the on-demand learning acceleration strategy, employin
 equilibrium. A comparison is made with the speedup obtained by removing the computing time needed for 
 the retrieval of the reference state (orange).}
 \end{figure}
+
+\begin{figure}[!t]
+\centering
+%\subfloat[]{{\includegraphics[width=0.46\textwidth, 
+%trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-10}
+%\label{fig:minerals-10-kinetics-calcite-dolomite}}}
+%\subfloat[]{\includegraphics[width=0.46\textwidth, 
+%trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-10}
+%\label{fig:aqueous-10-kinetics-calcite-dolomite}} \\[-10pt]
+%
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-48}
+\label{fig:minerals-1000-kinetics-calcite-dolomite}}
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-48}
+\label{fig:aqueous-1000-kinetics-calcite-dolomite}}\\[-10pt]
+%
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-3840}
+\label{fig:minerals-2400-kinetics-calcite-dolomite}}
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-3840}
+\label{fig:aqueous-2400-kinetics-calcite-dolomite}} \\[-10pt]
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/calcite-dolomite-7200}
+\label{fig:minerals-2400-kinetics-calcite-dolomite}}
+\subfloat[]{\includegraphics[width=0.46\textwidth, 
+trim={0 0 1.5cm 0.5cm},clip]{figures/kinetics-calcite-dolomite/aqueous-species-7200}
+\label{fig:aqueous-2400-kinetics-calcite-dolomite}}
+\caption{
+The volume percent ($\%_{{\rm vol}}$) of the minerals calcite and dolomite along the rock core 
+as well as the concentrations of selected aqueous species (in molal) at three different times: 
+1day, 80 days, and 150 days (after 48, 3840, and 7200 time steps of 30 minutes each). 
+The \emph{solid curves} correspond to results of the reactive transport simulation using conventional
+chemical kinetics calculations based on the integration of the system of ODEs for kinetically 
+controlled species and update of the equilibrium species by the Gibbs energy minimization.
+The circles ${\rm (}\bullet{\rm )}$ and ${\rm (}\circ{\rm )}$ correspond to the results using smart 
+chemical kinetics calculations. \emph{Solid circles} ${\rm (}\bullet{\rm )}$ indicate successful
+fast and accurate smart kinetics prediction at that point, whereas the \emph{empty circles} 
+${\rm (}\circ{\rm )}$ depict the cells where \emph{on-demand learning/training} was needed.}
+\label{fig:calcite-dolomite-kinetics-calcite-dolomite-50}
+\end{figure}
+
 
 }
 \end{document}
