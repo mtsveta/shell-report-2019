@@ -5,6 +5,7 @@
 
 \definecolor{carmine}{rgb}{0.59, 0.0, 0.09}
 \newcommand{\sveta}[1]{{\color{carmine}{#1}}}
+\newcommand{\allan}[1]{{\color{green}{#1}}}
 
 % Definition of \maketitle
 \makeatletter         
@@ -29,11 +30,13 @@
 \maketitle
 
 %---------------------------------------------------------------------------------------------------%
-\begin{abstract}
-The report summarizes the results obtained during the first year of the project ``Reaktoro as 
-the chemical reaction solver in Shell's reservoir simulator'. It is mainly focused on the first task 
-of the project plan, i.e., ``Accelerating chemical kinetics in reactivate transport calculations''. 
-\end{abstract}
+
+% I think we do not need this, because we have the Summary below
+% \begin{abstract}
+% This report summarizes the results obtained during the first year of the project ``Reaktoro as 
+% the chemical reaction solver in Shell's reservoir simulator'. It is mainly focused on the first task 
+% of the project plan, i.e., ``Accelerating chemical kinetics in reactivate transport calculations''. 
+% \end{abstract}
 
 \begin{comment}
 \sveta{Below, we provide the motivation of the this task. During the reactivate transport modeling, 
@@ -53,102 +56,354 @@ chemically reactive systems. Further research plans and ideas to improve conside
 also summarized.}
 \end{comment}
 
-\section*{Report Summary}
 
-This section provides a short summary of the results achieved this year as well as the outlook of 
-main future tasks and steps of further investigation. 
+\section*{Summary}
 
-{\bf Results}
+The main goals of this project are:
+\begin{itemize}
+\item Accelerate geochemical reaction calculations (chemical equilibrium
+and chemical kinetics) in reactive transport simulations using a novel
+on-demand machine learning algorithm.
+\item Implement missing geochemical capabilities and models in Reaktoro
+such as redox reactions, exchange, surface complexation, solid solutions,
+and other modeling capabilities. 
+\item Implement native support for PHREEQC databases in Reaktoro.
+\end{itemize}
+In this past year (the first year in this three-year project), we
+have primarily focused on advancing the first goal above (the most
+challenging deliverable among the others). We summarize below the
+results so far achieved, followed by the major tasks we will concentrate
+next year. 
+\begin{center}
+\textbf{\emph{\small{}The summary below aims to be self-contained in communicating the latest achievements of this project in a concise way. However, for a deeper understanding of some parts, further reading of the subsequent sections might be required.}}{\small\par}
+\par\end{center}
+
+\subsection*{Achievements in the past year}
+
+\subsubsection*{\emph{Further improvements in the accelerated chemical equilibrium
+algorithm }}
+
+Accelerating chemical equilibrium calculations will always be mission
+critical in the simulation of reactive transport phenomena. This is
+because assuming aqueous and gaseous species (and also some fast reacting
+minerals) to react under an instantaneous chemical equilibrium model
+is a suitable simplification. The reason for this is that the rates
+of those reactions are in general much faster than the rates of subsurface
+transport processes. 
+
+We extensively tested the on-demand machine learning algorithm (ODML)
+in a 1D reactive transport problem, where all chemical reaction processes
+were assumed to be controlled by chemical equilibrium. We considered
+a mesh with 100 cells, and executed 10,000 time steps. This required
+1,000,000 equilibrium calculations, one per mesh cell and per time
+step. A Pitzer activity model was used to represent the non-ideal
+thermodynamic behavior of the aqueous solution. The choice for using
+Pitzer model is because of its superior accuracy compared to others
+(Davies, Debye-H\"uckel), but also because it is one of most computationally
+expensive aqueous activity models in the literature. The chemical
+system consisted of 36 species in 4 phases (an aqueous phase and three
+mineral phases, namely, calcite, dolomite and quartz). We obtained
+the following results: 
+\begin{itemize}
+\item a speedup of \textbf{200}\textbf{\emph{x}} (in the worst case) and
+\textbf{400}\textbf{\emph{x}} (in the best\slash zero-cost-search
+case) for the chemical equilibrium calculations in the reactive transport
+simulations. 
+\item only \textbf{258} chemical equilibrium states out of \textbf{1,000,000}
+were fully evaluated (by triggering a Gibbs energy minimization computation);
+the rest, \textbf{99.97\%}, were quickly and accurately predicted. 
+\item the relative error of the predictions is less than 1\% for mineral
+phase volumes and less than 4\% for aqueous species concentrations. 
+\end{itemize}
+
+\subsubsection*{\emph{Manuscript submitted for publication}}
+
+A manuscript entitled \emph{Accelerating Reactive Transport Modeling:
+On-Demand Machine Learning Algorithm for Chemical Equilibrium Calculations
+}was submitted to the journal of Transport in Porous Media on November
+22nd, 2019. This manuscript presents our latest achievements on accelerated
+reactive transport simulations when using ODML to speed up exclusively
+chemical equilibrium calculations. A summary of this manuscript is
+presented in this report. We plan to submit a follow up manuscript
+next year on accelerating chemical kinetics in reactive transport
+simulations.
+
+\subsubsection*{\emph{Chemical kinetics accelerated with ODML }}
+
+We have started the work on using ODML algorithm to speed up chemical
+kinetics of mineral dissolution\slash precipitation reactions in reactive
+transport simulations. Our preliminary numerical experiments, using
+a similar reactive transport problem, with calcite dissolving kinetically,
+produced the following results: 
+\begin{itemize}
+\item a speedup of \textbf{8-10}\textbf{\emph{x}} for the chemical kinetics
+computations (compared to the conventional algorithm implemented in
+Reaktoro); 
+\item a speedup of \textbf{30}\textbf{\emph{x}} when combining accelerated
+chemical kinetics of mineral dissolution with accelerated chemical
+equilibrium calculations for the aqueous species.
+\end{itemize}
+We also have preliminary results on the use of ODML when more than
+one kinetically-controlled mineral reaction is considered:
+\begin{itemize}
+\item a speed up of \textbf{35-102}\textbf{\emph{x}} with two kinetically-controlled
+minerals; and
+\item a speed up of \textbf{92-124}\textbf{\emph{x}} with tree kinetically-controlled
+minerals. 
+\end{itemize}
+\textbf{Remark: }These results are a product of a few months of numerical
+experimentation, and the speedups listed above can be increased with
+our research plans and ideas outlined later.
+
+\subsubsection*{\emph{Rok, a reactive transport simulator (in its early stages) using
+Reaktoro and Firedrake}}
+
+Together with a collaborator, an expert in finite element methods
+and a long time user and contributor of Firedrake (\texttt{\href{http://firedrakeproject.org}{firedrakeproject.org}}),
+a Python library for solving partial differential equations, we developed
+a proof of concept of a reactive transport simulator: \textbf{Rok}.
+In this newly developed code, Reaktoro is used for the chemical reaction
+calculations and Firedrake for the solution of the coupled governing
+partial differential equations (species transport, Darcy equation,
+etc.). This simulator has allowed us to perform more interesting reactive
+transport simulations, considering higher-dimensions (2D) and strongly
+heterogeneous porous media. We plan to use Rok not only for simulations
+in general, but also as a testing platform to ensure that the ODML
+algorithms we are developing work optimally under more challenging
+geochemical and geologic conditions. 
+
+We believe this project will also be helpful to Shell, as it will
+demonstrate how Reaktoro can be coupled with other codes to develop
+reactive transport simulators. 
+
+\subsection*{Planned research tasks for next year}
+
+\subsubsection*{\emph{Improving the search operations in the algorithm}}
+
+In the on-demand learning algorithm, a new chemical equilibrium\slash kinetics
+calculation is performed by first searching for previously solved
+problems with similar input conditions. We currently use a nearest
+neighbor search approach, in which Euclidean distances are used to
+compare the new input vector with input vectors previously computed.
+The nearest neighbor problem is then used to estimate the solution
+of the new problem, using exact sensitivity analysis. 
+
+We have observed, however, that sometimes the nearest neighbor is
+not necessarily the most adequate reference point from which a prediction
+is performed, which end up causing many unnecessary training operations.
+This is particularly more pronounced when the complexity of the chemical
+system increases, which leads to an increased dimensionality of the
+input space. Our research plan to resolve this issue is to explore
+alternative search procedures, such as, for example, rank each previously
+solved problem in terms of how often it is used as a reference problem
+to successfully predict others. We could start our search by testing
+these key problems first. We could even limit the maximum number of
+stored trained problems. Only those that have been been successfully
+used to estimate\slash predict others and has a \emph{rate-of-use}
+higher than a tolerance would be kept in a dynamic database. 
+
+\subsubsection*{\emph{Improving the acceptance criteria in the algorithm}}
+
+The on-demand learning algorithm is able to entirely bypass the iterative
+computing processes of solving chemical equilibrium and kinetics problems.
+The approximated solutions of these problems need, however, to be
+accepted or rejected based on some given \emph{acceptance criteria}.
+A rejection triggers a new training operation, which is basically
+the solution of the problem in a conventional way (e.g. using a Gibbs
+energy minimization algorithm), followed by a sensitivity analysis
+operation. 
+
+Currently, our acceptance criteria sometimes trigger more training
+operations than it should (i.e. some predictions could have been safely
+accepted, but are otherwise marked as not accurate enough). We plan
+to improve the acceptance criteria in the ODML algorithm by using,
+for example, \emph{measures of disequilibrium of reactions}. For example,
+if the saturation index of a mineral that should be in equilibrium
+is estimated to be sufficiently far from equilibrium, we then decide
+that the estimated equilibrium state is not accurate enough, and it
+must be exactly computed, using a Gibbs energy minimization (GEM)
+algorithm. 
+
+This proposed test is potentially more adequate than the one we currently
+use: if predicted species activities and reference activities change
+by more than, say, 10\%, we declare the ODML prediction is not accurate
+enough and a new training is performed. 
+
+\subsubsection*{\emph{Accelerate chemical equilibrium calculations when evaluating
+reaction rates}}
+
+Reaction rates of mineral dissolution\slash precipitation processes
+require, in general, the saturation index of the minerals. This in
+turn require chemical equilibrium calculation for the aqueous\slash gaseous
+species. We plan to accelerate the evaluation of reaction rates by
+speeding up these chemical equilibrium calculations, which may be
+needed many times during a single kinetic time step. 
+
+\subsubsection*{\emph{Test the on-demand learning algorithm on more complex scenarios}}
+
+So far, we have mainly used a 1D reactive transport example, representative
+of a dolomitization process, to test the accelerated chemical equilibrium\slash kinetics
+algorithms. We plan to use Rok for testing the accelerated chemical
+algorithms in higher dimensions, in more complex geologic conditions.
+We also plan to model a highly complex reactive transport process
+resulting from the the attack of seawater into cement and concrete
+systems (with collaborators from the Paul Scherrer Institute, Switzerland).
+In this problem, we will consider \textasciitilde 100 aqueous species,
+\textasciitilde 60 pure minerals, and \textasciitilde 10 solid solutions. 
+
+Furthermore, we will also consider more complex cases for chemical
+kinetics, including more minerals under kinetic control. 
+
+\subsubsection*{\emph{Other numerical and computational tasks}}
+
+We also plan to:
+\begin{itemize}
+\item further develop Rok to permit 3D reactive transport simulations with
+heat transfer capabilities;
+\item improve support for modeling redox reactions in Reaktoro;
+\item decoupling of specific surface area from the reaction definition,
+so that different surface areas (for each mineral) can be set across
+the reservoir if needed;
+\item integrating our newly developed numerical optimization library, Optima,
+into Reaktoro for more robust and faster Gibbs energy minimization
+calculations;
+\item compare the backward differentiation formula (BDF) schemes provided
+by CVODE (the solver we currently use to solve ordinary differential
+equations) with RADAU algorithms (higher-order, implicit in time,
+Runge-Kutta methods) for numerical integration of the system of ODEs,
+in order to select the best solver for stiff ODE-systems describing
+kinetically controlled species;
+\item compare the performance of Reaktoro and PHREEQC on a set of benchmarks
+provided by Shell;
+\item together with collaborators from the Paul Scherrer Institute, improve
+the support of thermodynamic databases in Reaktoro, including those
+from PHREEQC.
+\end{itemize}
+\begin{center}
+\textbf{\emph{Priority will be given to tasks related to extending
+the modeling capabilities of Reaktoro and those that further improve
+the on-demand learning algorithms for faster chemical equilibrium\slash kinetics
+calculations. }}
+\par\end{center}
+
+\section*{Summary}
+
+In this project, our main goals are:
+
+\textbf{Goal 1}: Accelerate geochemical reaction calculations (chemical equilibrium 
+and chemical kinetics) in reactive transport simulations using a novel on-demand machine learning algorithm.
+
+\textbf{Goal 2}: Implement missing geochemical capabilities and models in Reaktoro such as redox reactions, exchange, surface complexation, solid solutions, and other modeling capabilities.
+
+\textbf{Goal 3}: Implement native support for PHREEQC databases in Reaktoro.
+
+For the past year, our focus has primarily been on advancing \textbf{Goal 1}, 
+the most challenging deliverable of this project. 
+
+We summarize below the results so far achieved followed by the major tasks 
+we will concentrate next year. 
+
+\subsubsection*{Our results this year}
 %---------------------------------------------------------------------------------------------------%
 \begin{enumerate}\setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item The on-demand learning machine algorithm (ODML) was tested on the one-dimensional reactive 
-transport problem, where chemistry is controlled by local equilibrium and Pitzer activity model for 
-the aqueous species. After extensive tests of such chemical system with 36~species in 4~phases, 
-the following results have been obtained:
+\item The on-demand machine learning algorithm (ODML) was extensively tested in a 1D reactive 
+transport problem, where chemistry is controlled by local equilibrium and a Pitzer activity model 
+is used for the aqueous solution. The chemical system consisted of 36~species in 4~phases 
+(an aqueous phase and three mineral phases, namely, calcite, dolomite and quartz). 
+The following results have been obtained:
 %
 %---------------------------------------------------------------------------------------------------%
 \begin{itemize}
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item Application of the ODML algorithm yields speedup of {\bf 200} (in the worst case) and 
-{\bf 400} (in the best / zero-cost-search case) for chemical calculation in reactive transport 
-simulations.
+\item The ODML algorithm yielded a speedup of {\bf 200} (in the worst case) and 
+{\bf 400} (in the best\slash zero-cost-search case) for the chemical equilibrium calculations
+in the reactive transport simulations.
 %
-\item Only {\bf 258} chemical states out of {\bf 1,000,000} has been evaluated fully (by triggering 
-Gibbs energy minimization (GEM) problem), the rest {\bf 99.97} \% of the cells are estimated in 
-a quick and accurate way.
+\item Only {\bf 258} chemical equilibrium states out of {\bf 1,000,000} were fully evaluated
+(by triggering a Gibbs energy minimization (GEM) computation); the rest, {\bf 99.97} \%, were 
+quickly and accurately estimated using exact sensitivity derivatives.
 %
 \item The relative error of the approximations provided by the smart approach (in comparison to 
 the conventional approach) is less than 1\% in mineral's phase-volumes and less than 4\% 
-in the aqueous species.  
+for the concentrations of the aqueous species.
 %
 \item Main results, obtained by testing the algorithm on the above-described benchmark, are 
-summarized in the paper recently submitted to the peer-reviewed journal. 
-%Journal of Transport in Porous Media 
-(TIPM).
+summarized in the paper recently submitted to journal Transport in Porous Media.
 \end{itemize}
 %
-\item The ODML algorithm was extended the reactive transport problem with chemical kinetics. 
-Extended tests on the one-dimensional benchmark example with Calcite assumed to be controlled 
-kinetically has provided the following results:
+\item The ODML algorithm was extended for reactive transport simulations with chemical kinetics 
+for mineral dissolution\slash precipitation reactions.  Our preliminary results, using a similar
+reactive transport problem, with calcite dissolving kinetically, produced the following results:
 %
 \begin{itemize} 
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item Application of the smart chemical kinetics algorithm alone provides a speedup of {\bf 8-10x}
+\item A speedup of {\bf 8-10x} in the chemical kinetics computations, compared to the conventional
+algorithm;
 %
-\item Application of the smart chemical kinetics algorithm together with smart equilibrium provides 
-speedup of {\bf 30x} and {\bf 100x} (in the worst and best case, respectively).
+\item A speedup of {\bf 30x} and {\bf 100x} (in the worst and best case, respectively) when 
+combining accelerated chemical kinetics of mineral dissolution with accelerated chemical 
+equilibrium calculations between the aqueous species.
 %
 \end{itemize}
 %---------------------------------------------------------------------------------------------------%
 %
 \item Application of the ODML method to the systems with more than one kinetically controlled 
 reactions indicates a potential for even higher speedups, i.e., {\bf 35-102x} for two and 
-{\bf 92-124x} for tree kinetic species.
+{\bf 92-124x} for tree kinetic minerals.
 %
 \item \texttt{Reaktoro} has been coupled with open-source partial differential equations (PDEs) 
 solver \texttt{Firedrake} for modeling high-dimensional heterogeneous reactive transport problems 
-as well as further testing and improvement of the ODML algorithm on more challenging scenarios.   
+as well as further testing and improvement of the ODML algorithm on more challenging scenarios.
 %
 \end{enumerate} 
 
 %---------------------------------------------------------------------------------------------------%
-{\bf Future tasks}
+\subsubsection*{Our planned tasks next year}
 %
 \begin{enumerate} \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item Improvement of the acceptance criterion in the ODML algorithm (providing fewer learnings 
-together with high accuracy).
+
+
+\item Improve the acceptance criteria in the ODML algorithm so that fewer training operations
+are triggered when more complex chemical setups are considered.
 %
-\item Improvement of the time for the reference element retrieval/search/lookup with 
+\item Improve the search operations in the algorithm (needed to identify a previously 
+trained problem that is potentially similar to the new one). We plan to 
 %---------------------------------------------------------------------------------------------------%
 \begin{itemize} 
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item combination of tree-based (kd-tree) and linear search algorithms,
-\item locally sensitive hashing tables (LSH),
-\item using reference points clustering/ranking.
+\item combine tree-based (kd-tree) and linear search algorithms,
+\item experiment with locally sensitive hashing tables (LSH),
+\item apply a ranking system to the learned problems, which will permit us to search first 
+those trained problems that are mostly used for predictions
+
+% Let's not mention this one, because this could seem as a promise; and it's already a lot to do.
+%\item experiment cluster using reference points clustering/ranking.
 \end{itemize}
 %---------------------------------------------------------------------------------------------------%
 %
-\item Including smart chemical equilibrium algorithm into the right-hand (RHS) evaluation of 
-the system of ODEs governing kinetically controlled species, which can cause up to hundreds of 
-chemical equilibrium calculations.
+\item Accelerate the aqueous\slash gaseous chemical equilibrium calculations needed during the evaluation of
+the reaction rates of minerals (e.g., when computing the current saturation indices of the minerals), 
+which can be very computationally expensive.
 %
-\item Extension of the smart approach to the evaluation of the chemical properties that might 
-improve performance of the reactive transport simulations, generally.
+% This won't work well I guess. There are too many inputs (high-dimension input space T, P, n) 
+% \item Extension of the smart approach to the evaluation of the chemical properties that might 
+% improve performance of the reactive transport simulations, generally.
 %
-\item Testing the ODML algorithm on more complex benchmarks:
+\item Test the ODML algorithm on more complex scenarios:
 %---------------------------------------------------------------------------------------------------%
 \begin{itemize} 
 \setlength{\itemsep}{0pt} \setlength{\parskip}{0pt}
-\item more advanced chemical systems, such as reactive transport for the rich chemical system, where 
-cement is attacked by seawater or NaCl brine (represented by 170 species with about a dozen of 
-different phases, including complex multi-mineral phases),
-\item chemical systems with more then one kinetically controlled species,
-\item reactive transport in two- and three-dimensional heterogeneous porous media.
+\item reactive transport resulting from the attack of seawater into cement and concrete systems, 
+considering for this about \~100 aqueous species, \~60 pure minerals, and \~10 solid solutions),
+\item chemical systems with more than one kinetically controlled mineral species,
+\item reactive transport in 2D (and possibly 3D) heterogeneous porous media using Rok, a simulator resulting 
+from the combination of Reaktoro and Firedrake.
 \end{itemize}
 %---------------------------------------------------------------------------------------------------%
-\item Upgrade currently used version of \texttt{CVODEv2.8.2} to \texttt{CVODEv5.0.0} and 
-replace it by its superset \texttt{CVODESv5.0.0}, providing the functionality to recover sensitivity 
-derivatives.
+%  This won't be appreciated (best not to mention)
+% \item Upgrade currently used version of \texttt{CVODEv2.8.2} to \texttt{CVODEv5.0.0} and 
+% replace it by its superset \texttt{CVODESv5.0.0}, providing the functionality to recover sensitivity 
+% derivatives.
 %
 \item Comparison of the backward differentiation formula (BDF) schemes used by \texttt{CVODE} to 
 the RADAU algorithm for numerical integration of the system of ODEs, in order to select the best solver 
@@ -157,7 +412,8 @@ for stiff ODE-systems describing kinetically controlled species.
 \item Further development of the \texttt{Rok} project to model three-dimensional reactive-transport 
 multiphase problem with a heat transfer. 
 %
-\item Addition of the support of redox reactions.  
+\sveta{
+\item Implement improved support for modeling redox reactions in Reaktoro.
 %
 \item Decoupling of specific surface area from the reaction definition. We plan to make the specific 
 surface area as part of the properties of the chemical state, since it can change during the course 
@@ -173,6 +429,7 @@ into \texttt{Reaktoro}.
 provided by Shell.
 %
 \item Focusing on implementation of \texttt{PHREEQC} functionality in Reaktoro. 
+}
 \end{enumerate}
 
 \section{Introduction}
@@ -466,7 +723,6 @@ solution of partial differential equations (PDEs) using the finite element metho
 this report together with a detailed road-map for further research efforts in this direction.
 \end{enumerate}
 
-
 %---------------------------------------------------------------------------------------------------%
 \section{Definitions and Notation\label{sec:Definitions-and-Notation}}
 
@@ -484,10 +740,11 @@ and \emph{electrical charge} (Z), but can also be linear combinations of these, 
 \emph{primary species} (e.g., H$^{+}$(aq), H$_{2}$O(l), CO$_{2}$(aq)).
 
 A chemical system can exist at infinitely many \emph{chemical states}. A chemical state is defined 
-here as the quadruplet $(T, P, n, b)$, where $T$ is temperature, $P$ is pressure,  
+here as the triplet $(T, P, n)$, where $T$ is temperature, $P$ is pressure,  
 $n=(n_{1},\ldots,n_{\mathrm{N}})\in\mathbb{R}^{{\rm N}}$ is the vector of species amounts 
 (speciation), with $n_{i}$ denoting the amount of the $i$th species (in moles) and N the number of 
-species, and $b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{{\rm E}}$ is the vector of element 
+species. The vector of element amounts is defined by 
+$b=(b_{1},\ldots,b_{\mathrm{E}})\in\mathbb{R}^{{\rm E}}$ is the vector of element 
 amounts with $b_{j}$ being the amount of the $j$th element (in moles) and ${\rm E}$ the number of 
 elements. In general, $b$ is related to $n$ via the following mass conservation equation:
 %
@@ -2439,8 +2696,8 @@ upon improvement of the search algorithm.}
 %---------------------------------------------------------------------------------------------------%
 Next, we list some of the results obtained for the numerical example, where both calcite and 
 dolomite are considered dissolving and precipitation kinetically. The rate model parameters of the 
-dolomite are presented in Listing \ref{lst:dolomite}, the one for calcite are considered the same as
-the one in Subsection \ref{subsec:part-2}.
+dolomite are presented in Listing \ref{lst:dolomite}, the parameters for calcite are the same as
+in Subsection \ref{subsec:part-2}.
 
 \begin{minipage}{\linewidth}
 \begin{lstlisting}[language=C++, caption=Parameters of the rate model for dolomite, label=lst:dolomite]
@@ -2454,10 +2711,9 @@ editor.addMineralReaction("Dolomite")
 
 The initial composition of rock in this example contains 90 \% of quartz, 6\% of calcite, and 
 4\% of dolomite. This also can be observed from the initial reactive transport step in Figure 
-\ref{fig:minerals-1000-kinetics-calcite-dolomite} illustrating first steps of minerals precipitation 
-and dissolution. In comparison to the results obtained in Section \ref{subsec:part-2} the chemical 
-reactions of this system proceed much slower, i.e., calcite just dissolved in until 0.06-0.07m 
-of the rock column after 80 days and until approximately 0.15 after 150 days.  
+and dissolution. In comparison to the results obtained in Section \ref{subsec:part-2}, chemical 
+reactions of this system proceed much slower, i.e., calcite just dissolved up to 0.06-0.07m 
+of the rock column after 80 days and up to 0.15m after 150 days.  
 
 \begin{comment}
 \begin{minipage}{\linewidth}
@@ -2473,10 +2729,10 @@ state_ic.scalePhaseVolume("Dolomite", 0.036, "m3"); // 4% dolomite of the 0.9m3 
 Unlike the examples with only one kinetics species, Figure 
 \ref{fig:number-trainingkinetics-calcite-dolomite} demonstrates rather uniform distribution of the 
 learnings throughout the reactive transport simulation. This influences the accumulated number of 
-the trainings in Figure \ref{fig:number-trainingkinetics-calcite-dolomite-2}, which now reminds 
-the stair case (i.e., on some steps of reactive transport we need up to 6 or 7 learnings, in 
-comparison to those steps, where 1 or none learnings are needed). We plan to study in dept the 
-reasons why these learnings are triggered and possible improve the quality of prediction or 
+trainings in Figure \ref{fig:number-trainingkinetics-calcite-dolomite-2}, which now reminds 
+the staircase (i.e., on some steps of reactive transport we need up to 6 or 7 learnings, in 
+comparison to those steps, where 1 or none learnings are needed). We plan to study in depth the 
+reasons why these learnings are triggered and possibly to improve the quality of prediction or 
 acceptance criterion. 
 
 %---------------------------------------------------------------------------------------------------%
@@ -2495,14 +2751,31 @@ and accurately estimated ODML algorithm.
 \label{fig:number-trainingkinetics-calcite-dolomite}}
 \end{figure}
 
+Figure \ref{fig:2-reacts-kinetics-only} provides the computational time (in $\mu$s) and corresponding 
+speedups obtained, when the ODML approach is applied only to chemical kinetics. We see from Figure
+\ref{fig:2-reacts-kinetics-only-1} that since the retrieval from the storage with saved reference 
+problems is needed only for smart estimation of kinetic species, the ideal CPU costs (in red) are 
+similar to those depicted by the orange line. A similar trend is seen in 
+Figure \ref{fig:2-reacts-kinetics-only-2}, where 
+average values of the obtained speedups are 16x and 19x respectively for the current implementation 
+of the algorithm and the one with improved storage implementation.
+
+Figure \ref{fig:2-reacts-kinetics-and-equilibrium}, on the contrary, contains information on the 
+performance of the algorithm, where both kinetics and equilibrium are accelerated by the ODML. 
+Here, the difference between ideal and current implementation is rather noticeable. In Figure 
+\ref{fig:2-reacts-kinetics-and-equilibrium-1}, the orange line depicting the ODML algorithm costs
+is constantly increasing, which explains the decrease of speedup (in blue) in Figure 
+\ref{fig:2-reacts-kinetics-and-equilibrium-2}. This issue is currently is being studied and soon
+will be fixed.
+
 %---------------------------------------------------------------------------------------------------%
 \begin{figure}[!t]
 \subfloat[Computing costs]{
 \includegraphics[width=0.47\textwidth]{figures/kinetics-only-calcite-dolomite/computing-costs}
-\label{fig:computational-cost-kinetics-calcite-dolomite}}
+\label{fig:2-reacts-kinetics-only-1}}
 \subfloat[Speedups]{
 \includegraphics[width=0.47\textwidth]{figures/kinetics-only-calcite-dolomite/speedups}
-\label{fig:speedup-with-and-without-search-costs-kinetics-calcite-dolomite}}
+\label{fig:2-reacts-kinetics-only-2}}
 \caption{
 Results obtained for the ODML applied to chemical kinetics only.
 (a) Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
@@ -2513,17 +2786,18 @@ reactive transport time step, where the ODML applied for both kinetics and equil
 resulting from the use of the on-demand learning acceleration strategy, employing a linear NN search 
 (blue), where the ODML applied for both kinetics and 
 equilibrium. A comparison is made with the speedup obtained by removing the computing time needed for 
-the retrieval of the reference state (orange).}
+the retrieval of the reference state (orange).
+\label{fig:2-reacts-kinetics-only}}
 \end{figure}
 
 %---------------------------------------------------------------------------------------------------%
 \begin{figure}[!t]
 \subfloat[Computing costs]{
 \includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/computing-costs}
-\label{fig:computational-cost-kinetics-calcite-dolomite}}
+\label{fig:2-reacts-kinetics-and-equilibrium-1}}
 \subfloat[Speedups]{
 \includegraphics[width=0.47\textwidth]{figures/kinetics-calcite-dolomite/speedups}
-\label{fig:speedup-with-and-without-search-costs-kinetics-calcite-dolomite}}
+\label{fig:2-reacts-kinetics-and-equilibrium-2}}
 \caption{
 Results obtained for the ODML applied to both chemical kinetics and equilibrium.
 (a) Comparison of the computing costs (CPU time in microseconds) of transport, conventional, smart 
@@ -2534,7 +2808,8 @@ reactive transport time step, where the ODML applied for both kinetics and equil
 resulting from the use of the on-demand learning acceleration strategy, employing a linear NN search 
 (blue), where the ODML applied for both kinetics and 
 equilibrium. A comparison is made with the speedup obtained by removing the computing time needed for 
-the retrieval of the reference state (orange).}
+the retrieval of the reference state (orange).
+\label{fig:2-reacts-kinetics-and-equilibrium}}
 \end{figure}
 
 \begin{figure}[!t]
@@ -2581,5 +2856,7 @@ ${\rm (}\circ{\rm )}$ depict the cells where \emph{on-demand learning/training} 
 
 
 }
+
+
 \end{document}
 

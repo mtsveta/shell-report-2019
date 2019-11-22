@@ -1,0 +1,573 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "garamondx" "default"
+\font_sans "default" "default"
+\font_typewriter "tgcursor" "default"
+\font_math "garamondx-ntxm" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 1
+\output_sync_macro "\synctex=-1"
+\bibtex_command default
+\index_command default
+\paperfontsize 12
+\spacing single
+\use_hyperref true
+\pdf_author "Allan M. M. Leal"
+\pdf_bookmarks true
+\pdf_bookmarksnumbered false
+\pdf_bookmarksopen false
+\pdf_bookmarksopenlevel 1
+\pdf_breaklinks false
+\pdf_pdfborder true
+\pdf_colorlinks false
+\pdf_backref false
+\pdf_pdfusetitle true
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine natbib
+\cite_engine_type authoryear
+\biblio_style plainnat
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date true
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation skip
+\defskip smallskip
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Section*
+Summary
+\end_layout
+
+\begin_layout Standard
+The main goals of this project are:
+\end_layout
+
+\begin_layout Itemize
+Accelerate geochemical reaction calculations (chemical equilibrium and chemical
+ kinetics) in reactive transport simulations using a novel on-demand machine
+ learning algorithm.
+\end_layout
+
+\begin_layout Itemize
+Implement missing geochemical capabilities and models in Reaktoro such as
+ redox reactions, exchange, surface complexation, solid solutions, and other
+ modeling capabilities.
+ 
+\end_layout
+
+\begin_layout Itemize
+Implement native support for PHREEQC databases in Reaktoro.
+\end_layout
+
+\begin_layout Standard
+In this past year (the first year in this three-year project), we have primarily
+ focused on advancing the first goal above (the most challenging deliverable
+ among the others).
+ We summarize below the results so far achieved, followed by the major tasks
+ we will concentrate next year.
+ 
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\series bold
+\size small
+\emph on
+The summary below aims to be self contained in an effort to enable those
+ not so involved in this project to understand our latest achievements in
+ a quicker way.
+ Some parts, however, may require further reading in the subsequent sections
+ for proper understanding.
+\end_layout
+
+\begin_layout Subsection*
+Achievements in the past year
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Further improvements in the accelerated chemical equilibrium algorithm 
+\end_layout
+
+\begin_layout Standard
+Accelerating chemical equilibrium calculations will always be mission critical
+ in the simulation of reactive transport phenomena.
+ This is because assuming aqueous and gaseous species (and also some fast
+ reacting minerals) to react under an instantaneous chemical equilibrium
+ model is a suitable simplification.
+ The reason for this is that the rates of those reactions are in general
+ much faster than the rates of subsurface transport processes.
+ 
+\end_layout
+
+\begin_layout Standard
+We extensively tested the on-demand machine learning algorithm (ODML) in
+ a 1D reactive transport problem, where all chemical reaction processes
+ were assumed to be controlled by chemical equilibrium.
+ We considered a mesh with 100 cells, and executed 10,000 time steps.
+ This required 1,000,000 equilibrium calculations, one per mesh cell and
+ per time step.
+ A Pitzer activity model was used to represent the non-ideal thermodynamic
+ behavior of the aqueous solution.
+ The choice for using Pitzer model is because of its superior accuracy compared
+ to others (Davies, Debye-Hückel), but also because it is one of most computatio
+nally expensive aqueous activity models in the literature.
+ The chemical system consisted of 36 species in 4 phases (an aqueous phase
+ and three mineral phases, namely, calcite, dolomite and quartz).
+ We obtained the following results: 
+\end_layout
+
+\begin_layout Itemize
+a speedup of 
+\series bold
+200
+\emph on
+x
+\series default
+\emph default
+ (in the worst case) and 
+\series bold
+400
+\emph on
+x
+\series default
+\emph default
+ (in the best\SpecialChar breakableslash
+zero-cost-search case) for the chemical equilibrium calculations
+ in the reactive transport simulations.
+ 
+\end_layout
+
+\begin_layout Itemize
+only 
+\series bold
+258
+\series default
+ chemical equilibrium states out of 
+\series bold
+1,000,000
+\series default
+ were fully evaluated (by triggering a Gibbs energy minimization computation);
+ the rest, 
+\series bold
+99.97%
+\series default
+, were quickly and accurately predicted.
+ 
+\end_layout
+
+\begin_layout Itemize
+the relative error of the predictions is less than 1% for mineral phase
+ volumes and less than 4% for aqueous species concentrations.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Manuscript submitted for publication
+\end_layout
+
+\begin_layout Standard
+A manuscript entitled 
+\emph on
+Accelerating Reactive Transport Modeling: On-Demand Machine Learning Algorithm
+ for Chemical Equilibrium Calculations 
+\emph default
+was submitted to the journal of Transport in Porous Media on November 22nd,
+ 2019.
+ This manuscript presents our latest achievements on accelerated reactive
+ transport simulations when using ODML to speed up exclusively chemical
+ equilibrium calculations.
+ A summary of this manuscript is presented in this report.
+ We plan to submit a follow up manuscript next year on accelerating chemical
+ kinetics in reactive transport simulations.
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Chemical kinetics accelerated with ODML 
+\end_layout
+
+\begin_layout Standard
+We have started the work on using ODML algorithm to speed up chemical kinetics
+ of mineral dissolution\SpecialChar breakableslash
+precipitation reactions in reactive transport simulations.
+ Our preliminary numerical experiments, using a similar reactive transport
+ problem, with calcite dissolving kinetically, produced the following results:
+ 
+\end_layout
+
+\begin_layout Itemize
+a speedup of 
+\series bold
+8-10
+\emph on
+x
+\series default
+\emph default
+ for the chemical kinetics computations (compared to the conventional algorithm
+ implemented in Reaktoro); 
+\end_layout
+
+\begin_layout Itemize
+a speedup of 
+\series bold
+30
+\emph on
+x
+\series default
+\emph default
+ when combining accelerated chemical kinetics of mineral dissolution with
+ accelerated chemical equilibrium calculations for the aqueous species.
+\end_layout
+
+\begin_layout Standard
+We also have preliminary results on the use of ODML when more than one kinetical
+ly-controlled mineral reaction is considered:
+\end_layout
+
+\begin_layout Itemize
+a speed up of 
+\series bold
+35-102
+\emph on
+x
+\series default
+\emph default
+ with two kinetically-controlled minerals; and
+\end_layout
+
+\begin_layout Itemize
+a speed up of 
+\series bold
+92-124
+\emph on
+x
+\series default
+\emph default
+ with tree kinetically-controlled minerals.
+ 
+\end_layout
+
+\begin_layout Standard
+
+\series bold
+Remark: 
+\series default
+These results are a product of a few months of numerical experimentation,
+ and the speedups listed above can be increased with our research plans
+ and ideas outlined later.
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Rok, a reactive transport simulator (in its early stages) using Reaktoro
+ and Firedrake
+\end_layout
+
+\begin_layout Standard
+Together with a collaborator, an expert in finite element methods and a
+ long time user and contributor of Firedrake (
+\family typewriter
+
+\begin_inset CommandInset href
+LatexCommand href
+name "firedrakeproject.org"
+target "firedrakeproject.org"
+literal "false"
+
+\end_inset
+
+
+\family default
+), a Python library for solving partial differential equations, we developed
+ a proof of concept of a reactive transport simulator: 
+\series bold
+Rok
+\series default
+.
+ In this newly developed code, Reaktoro is used for the chemical reaction
+ calculations and Firedrake for the solution of the coupled governing partial
+ differential equations (species transport, Darcy equation, etc.).
+ This simulator has allowed us to perform more interesting reactive transport
+ simulations, considering higher-dimensions (2D) and strongly heterogeneous
+ porous media.
+ We plan to use Rok not only for simulations in general, but also as a testing
+ platform to ensure that the ODML algorithms we are developing work optimally
+ under more challenging geochemical and geologic conditions.
+ 
+\end_layout
+
+\begin_layout Standard
+We believe this project will also be helpful to Shell, as it will demonstrate
+ how Reaktoro can be coupled with other codes to develop reactive transport
+ simulators.
+ 
+\end_layout
+
+\begin_layout Subsection*
+Planned research tasks for next year
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Improving the search operations in the algorithm
+\end_layout
+
+\begin_layout Standard
+In the on-demand learning algorithm, a new chemical equilibrium\SpecialChar breakableslash
+kinetics
+ calculation is performed by first searching for previously solved problems
+ with similar input conditions.
+ We currently use a nearest neighbor search approach, in which Euclidean
+ distances are used to compare the new input vector with input vectors previousl
+y computed.
+ The nearest neighbor problem is then used to estimate the solution of the
+ new problem, using exact sensitivity analysis.
+ 
+\end_layout
+
+\begin_layout Standard
+We have observed, however, that sometimes the nearest neighbor is not necessaril
+y the most adequate reference point from which a prediction is performed,
+ which end up causing many unnecessary training operations.
+ This is particularly more pronounced when the complexity of the chemical
+ system increases, which leads to an increased dimensionality of the input
+ space.
+ Our research plan to resolve this issue is to explore alternative search
+ procedures, such as, for example, rank each previously solved problem in
+ terms of how often it is used as a reference problem to successfully predict
+ others.
+ We could start our search by testing these key problems first.
+ We could even limit the maximum number of stored trained problems.
+ Only those that have been been successfully used to estimate\SpecialChar breakableslash
+predict others
+ and has a 
+\emph on
+rate-of-use
+\emph default
+ higher than a tolerance would be kept in a dynamic database.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Improving the acceptance criteria in the algorithm
+\end_layout
+
+\begin_layout Standard
+The on-demand learning algorithm is able to entirely bypass the iterative
+ computing processes of solving chemical equilibrium and kinetics problems.
+ The approximated solutions of these problems need, however, to be accepted
+ or rejected based on some given 
+\emph on
+acceptance criteria
+\emph default
+.
+ A rejection triggers a new training operation, which is basically the solution
+ of the problem in a conventional way (e.g.
+ using a Gibbs energy minimization algorithm), followed by a sensitivity
+ analysis operation.
+ 
+\end_layout
+
+\begin_layout Standard
+Currently, our acceptance criteria sometimes trigger more training operations
+ than it should (i.e.
+ some predictions could have been safely accepted, but are otherwise marked
+ as not accurate enough).
+ We plan to improve the acceptance criteria in the ODML algorithm by using,
+ for example, 
+\emph on
+measures of disequilibrium of reactions
+\emph default
+.
+ For example, if the saturation index of a mineral that should be in equilibrium
+ is estimated to be sufficiently far from equilibrium, we then decide that
+ the estimated equilibrium state is not accurate enough, and it must be
+ exactly computed, using a Gibbs energy minimization (GEM) algorithm.
+ 
+\end_layout
+
+\begin_layout Standard
+This proposed test is potentially more adequate than the one we currently
+ use: if predicted species activities and reference activities change by
+ more than, say, 10%, we declare the ODML prediction is not accurate enough
+ and a new training is performed.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Accelerate chemical equilibrium calculations when evaluating reaction rates
+\end_layout
+
+\begin_layout Standard
+Reaction rates of mineral dissolution\SpecialChar breakableslash
+precipitation processes require, in
+ general, the saturation index of the minerals.
+ This in turn require chemical equilibrium calculation for the aqueous\SpecialChar breakableslash
+gaseous
+ species.
+ We plan to accelerate the evaluation of reaction rates by speeding up these
+ chemical equilibrium calculations, which may be needed many times during
+ a single kinetic time step.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Test the on-demand learning algorithm on more complex scenarios
+\end_layout
+
+\begin_layout Standard
+So far, we have mainly used a 1D reactive transport example, representative
+ of a dolomitization process, to test the accelerated chemical equilibrium\SpecialChar breakableslash
+kineti
+cs algorithms.
+ We plan to use Rok for testing the accelerated chemical algorithms in higher
+ dimensions, in more complex geologic conditions.
+ We also plan to model a highly complex reactive transport process resulting
+ from the the attack of seawater into cement and concrete systems (with
+ collaborators from the Paul Scherrer Institute, Switzerland).
+ In this problem, we will consider ~100 aqueous species, ~60 pure minerals,
+ and ~10 solid solutions.
+ 
+\end_layout
+
+\begin_layout Standard
+Furthermore, we will also consider more complex cases for chemical kinetics,
+ including more minerals under kinetic control.
+ 
+\end_layout
+
+\begin_layout Subsubsection*
+
+\emph on
+Other numerical and computational tasks
+\end_layout
+
+\begin_layout Standard
+We also plan to:
+\end_layout
+
+\begin_layout Itemize
+further develop Rok to permit 3D reactive transport simulations with heat
+ transfer capabilities;
+\end_layout
+
+\begin_layout Itemize
+improve support for modeling redox reactions in Reaktoro;
+\end_layout
+
+\begin_layout Itemize
+decoupling of specific surface area from the reaction definition, so that
+ different surface areas (for each mineral) can be set across the reservoir
+ if needed;
+\end_layout
+
+\begin_layout Itemize
+integrating our newly developed numerical optimization library, Optima,
+ into Reaktoro for more robust and faster Gibbs energy minimization calculations
+;
+\end_layout
+
+\begin_layout Itemize
+compare the backward differentiation formula (BDF) schemes provided by CVODE
+ (the solver we currently use to solve ordinary differential equations)
+ with RADAU algorithms (higher-order, implicit in time, Runge-Kutta methods)
+ for numerical integration of the system of ODEs, in order to select the
+ best solver for stiff ODE-systems describing kinetically controlled species;
+\end_layout
+
+\begin_layout Itemize
+compare the performance of Reaktoro and PHREEQC on a set of benchmarks provided
+ by Shell;
+\end_layout
+
+\begin_layout Itemize
+together with collaborators from the Paul Scherrer Institute, improve the
+ support of thermodynamic databases in Reaktoro, including those from PHREEQC.
+\end_layout
+
+\begin_layout Standard
+\align center
+
+\series bold
+\emph on
+Priority will be given to tasks related to extending the modeling capabilities
+ of Reaktoro and those that further improve the on-demand learning algorithms
+ for faster chemical equilibrium\SpecialChar breakableslash
+kinetics calculations.
+ 
+\end_layout
+
+\end_body
+\end_document
